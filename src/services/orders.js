@@ -1,5 +1,5 @@
 // Order placement layer.
-// placeOrderRemote() sends the order to POST /api/orders. The server re-checks product, design, price and
+// placeOrderRemote() sends the order to POST /orders. The server re-checks product, design, price and
 // quantity and returns the real order; a copy is cached in this browser so the confirmation page can show it
 // (together with the token needed to read it again). There is no offline/demo mode.
 //

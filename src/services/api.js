@@ -1,4 +1,12 @@
-// Tiny fetch wrapper for the Pooja Collection backend (VITE_CRM_API_URL, e.g. http://localhost:8000).
+// Tiny fetch wrapper for the Pooja Collection backend (VITE_CRM_API_URL).
+//
+// VITE_CRM_API_URL should include the full base path of the Pooja API, e.g.:
+//   Local:      http://localhost:8000/api/pooja
+//   Production: https://nuerix-crm.onrender.com/api/pooja
+//
+// `path` passed to api() must NOT start with `/api`. It is appended directly
+// to VITE_CRM_API_URL, e.g. api('/catalog') => <base>/catalog.
+
 import { CRM } from '../config';
 import { getToken } from './session';
 
@@ -17,9 +25,14 @@ export async function api(path, { method = 'GET', body, headers = {}, timeoutMs 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const token = getToken();
+
+  // Trim trailing slashes from the base and ensure `path` starts with a single slash.
+  const base = CRM.apiUrl.replace(/\/+$/, '');
+  const suffix = path ? (path.startsWith('/') ? path : `/${path}`) : '';
+
   let res;
   try {
-    res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/api${path}`, {
+    res = await fetch(`${base}${suffix}`, {
       method,
       signal: controller.signal,
       headers: {

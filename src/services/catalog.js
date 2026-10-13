@@ -1,6 +1,6 @@
 // Catalogue access layer. Components only talk to this file.
 // There is no bundled catalogue: categories, products and image URLs all come from the backend
-// (GET /api/catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
+// (GET /catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
 // retry screen if the backend can't be reached.
 
 import { CRM, EXCLUDED_CATEGORY_SLUGS, HIDDEN_TAGS } from '../config';
@@ -9,11 +9,13 @@ const excluded = new Set(EXCLUDED_CATEGORY_SLUGS);
 const hiddenTags = new Set(HIDDEN_TAGS.map((t) => t.toLowerCase()));
 const isAllowed = (slug) => !excluded.has(String(slug).toLowerCase());
 
-// Image paths from the API are relative to the backend (e.g. /media/products/x.webp).
+// Image paths from the API are relative to the backend (e.g. /media/pooja/products/x.webp).
 export const imageUrl = (path) => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
-  return `${CRM.apiUrl.replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+  // `CRM.mediaUrl` points at the backend root (e.g. http://localhost:8000) since the API
+  // returns fully-qualified paths like /media/pooja/products/x.webp.
+  return `${(CRM.mediaUrl || CRM.apiUrl).replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 // A product only has selectable designs when the data lists them explicitly as [{ id, label }].
@@ -29,7 +31,7 @@ const FEATURED_TAGS = ['Best Seller', 'Trending', 'Viral', 'Premium', 'New Arriv
 let products = [];
 let categories = [];
 
-/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /api/catalog). */
+/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /catalog). */
 export function setCatalog(data) {
   const nextProducts = data.products
     .filter((p) => isAllowed(p.categorySlug))
@@ -37,7 +39,6 @@ export function setCatalog(data) {
       ...p,
       image: imageUrl(p.image),
       designs: cleanDesigns(p.designs),
-      // Internal tags (e.g. supplier names) are never shown to customers.
       tag: p.tag && !hiddenTags.has(p.tag.toLowerCase()) ? p.tag : null,
       isNew: p.tag === 'New Arrival',
       bestSeller: p.tag === 'Best Seller',
@@ -70,7 +71,7 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/api/catalog`, { signal: controller.signal });
+    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/catalog`, { signal: controller.signal });
     if (!res.ok) return false;
     const data = await res.json();
     if (!Array.isArray(data?.products) || !Array.isArray(data?.categories)) return false;
@@ -91,7 +92,6 @@ export const getProductBySlug = (slug) => products.find((p) => p.slug === slug) 
 export const getRelatedProducts = (product, limit = 4) =>
   products.filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id).slice(0, limit);
 
-// Every product from every category except the given one (data comes from GET /api/catalog).
 export const getOtherProducts = (product) => products.filter((p) => p.id !== product.id);
 
 export const getFeaturedProducts = (limit = 8) =>
@@ -100,8 +100,6 @@ export const getFeaturedProducts = (limit = 8) =>
     .sort((a, b) => FEATURED_TAGS.indexOf(a.tag) - FEATURED_TAGS.indexOf(b.tag))
     .slice(0, limit);
 
-// Trending: every featured product (up to `featuredLimit`) plus `extra` more real catalogue items
-// that are not already featured. Nothing is invented: the extras come from the same catalogue.
 export function getTrendingProducts(featuredLimit = 8, extra = 1) {
   const featured = getFeaturedProducts(featuredLimit);
   const ids = new Set(featured.map((p) => p.id));
@@ -114,15 +112,12 @@ const SORTERS = {
   'price-desc': (a, b) => b.price - a.price,
 };
 
-/** Lowest and highest catalogue price (whole rupees), or null when the catalogue is empty. */
 export function getPriceBounds() {
   if (!products.length) return null;
   const prices = products.map((p) => p.price);
   return { min: Math.min(...prices), max: Math.max(...prices) };
 }
 
-// categorySlug (single) is the existing category-page filter; categorySlugs (array) is the Shop filter.
-// minPrice / maxPrice are inclusive and use the real catalogue price. Omit them for no price limit.
 export function getProducts({ categorySlug, categorySlugs, query, collection, sort, minPrice, maxPrice } = {}) {
   let list = products;
 
