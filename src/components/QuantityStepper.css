@@ -1,0 +1,11 @@
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--gold); border-radius: 999px; }
+.qty button { width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: transparent; border-radius: 50%; }
+.qty button:hover { background: var(--cream); }
+.qty span { min-width: 26px; text-align: center; font-weight: 500; }
+.qty-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.qty-note { margin: 0; font-size: .82rem; color: var(--muted); }
+.qty button:disabled { opacity: .35; cursor: not-allowed; }
+.qty button:disabled:hover { background: transparent; }
+@media (max-width: 760px), (pointer: coarse) {
+  .qty button { width: 44px; height: 44px; }
+}

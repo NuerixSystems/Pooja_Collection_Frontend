@@ -1,0 +1,38 @@
+.page-chips { margin-bottom: 24px; }
+.sort select {
+  padding: 8px 14px; border: 1px solid var(--gold); border-radius: 999px;
+  background: var(--page); color: var(--burgundy); font: inherit;
+}
+.chip { display: inline-flex; align-items: center; }
+
+/* ---------- Part 2: shared page polish (burgundy / champagne gold, subtle borders) ---------- */
+.eyebrow { margin: 0 0 6px; font-size: .78rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.about-lede { font-size: 1.1rem; max-width: 56ch; }
+.about-actions, .empty-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.empty-actions { justify-content: center; margin: 18px 0 0; }
+.empty .btn { margin-top: 0; }
+.form-hint { margin: 14px 0 0; font-size: .88rem; color: var(--muted); }
+.wishlist-enquire { gap: 8px; border-color: var(--gold); }
+
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.crumbs [aria-current='page'] { color: var(--muted); }
+
+/* Buttons: consistent focus + disabled + press feel */
+.btn { transition: background .18s ease, color .18s ease, border-color .18s ease, transform .12s ease; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn--ghost { border-color: var(--gold); }
+
+/* Forms and messages */
+.field input:focus, .field textarea:focus { border-color: var(--gold); }
+.field label { color: var(--burgundy); font-weight: 500; }
+.checkout-error { padding: 12px 14px; border-radius: 8px; background: #fbeeee; border: 1px solid #e2b8ba; }
+.summary, .pay-option, .upi-box, .contact-card { border-color: var(--line); }
+.summary { background: var(--cream); }
+.cart-page-thumb { border: 1px solid rgba(184, 147, 90, .3); }
+
+/* Product detail image uses the same 4:5 frame as product cards */
+.product-page-media { aspect-ratio: 4 / 5; }
+
+/* Never scroll sideways */
+main { overflow-x: clip; }

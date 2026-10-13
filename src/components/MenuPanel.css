@@ -1,0 +1,6 @@
+.menu-list { list-style: none; margin: 0; padding: 0; }
+.menu-list a { display: block; min-height: 44px; padding: 11px 0; font-size: 1.15rem; border-bottom: 1px solid var(--line); }
+.menu-list a:hover { color: var(--gold); }
+.menu-list--sub a { font-size: 1rem; color: var(--muted); }
+.menu-heading { font-size: 1.5rem; margin: 28px 0 4px; }
+.menu-login { width: 100%; margin-top: 28px; }

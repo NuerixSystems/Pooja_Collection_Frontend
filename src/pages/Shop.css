@@ -1,0 +1,30 @@
+/* Shop page: sidebar + results on desktop, toolbar + drawer on tablet/mobile. */
+.shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (min-width: 901px) { .shop-layout { grid-template-columns: 260px minmax(0, 1fr); gap: 32px; } }
+
+.shop-sidebar {
+  position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow-y: auto;
+  padding: 4px 20px 8px; background: var(--page); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.shop-sidebar__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 0 10px; }
+.shop-sidebar__head h2 { font-size: 1.5rem; }
+.filter-clear { border: 0; background: transparent; padding: 6px 4px; color: var(--gold); font: inherit; font-size: .9rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.filter-clear:hover { color: var(--burgundy); }
+
+.shop-results { min-width: 0; }
+.shop-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.shop-count { margin: 0; color: var(--muted); font-size: .95rem; margin-right: auto; }
+.filters-btn { padding: 8px 20px; gap: 8px; border-color: var(--gold); }
+.filters-btn__badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--burgundy); color: var(--champagne); font-size: .78rem; }
+.filters-btn:hover .filters-btn__badge { background: var(--champagne); color: var(--burgundy); }
+
+/* Mobile drawer footer: Reset / Apply stay visible while the filters scroll. */
+.filter-actions {
+  position: sticky; bottom: -24px; display: flex; gap: 12px; margin: 16px -24px -24px; padding: 14px 24px;
+  background: var(--page); border-top: 1px solid var(--line);
+}
+.filter-actions .btn { flex: 1; }
+
+/* No sideways scrolling anywhere on the page. */
+.shop-layout, .shop-results, .product-grid { max-width: 100%; }
+@media (max-width: 760px) { .section-head .sort { width: 100%; } .section-head .sort select { width: 100%; } }

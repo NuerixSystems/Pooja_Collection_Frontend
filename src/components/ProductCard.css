@@ -1,0 +1,75 @@
+/* Product grid + card. Used by Shop, Trending, category pages, wishlist. */
+.product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px 20px; }
+
+.product-card {
+  position: relative; display: flex; flex-direction: column; min-width: 0;
+  background: var(--page); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  transition: box-shadow .25s ease, border-color .25s ease, transform .25s ease;
+}
+.product-card:hover { border-color: rgba(184, 147, 90, .6); box-shadow: 0 10px 26px rgba(63, 20, 38, .1); transform: translateY(-2px); }
+
+/* Whole-card click target: the name link stretches over the card; the buttons sit above it. */
+.product-link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+.product-card:hover .product-link { color: var(--gold); }
+
+/* Every image sits in the same 4:5 frame, centred and cropped (never stretched). */
+.product-media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--cream); border-bottom: 1px solid rgba(184, 147, 90, .3); }
+.product-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform .45s ease; }
+.product-card:hover .product-img { transform: scale(1.04); }
+.product-media .safe-image-fallback { width: 100%; height: 100%; }
+
+.product-badge {
+  position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: 999px;
+  background: var(--burgundy); color: var(--champagne); font-size: .75rem; font-weight: 500; letter-spacing: .02em;
+}
+.wish-btn {
+  position: absolute; top: 6px; right: 6px; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: rgba(251, 247, 241, .9); color: var(--burgundy);
+}
+.wish-btn:hover { background: var(--page); color: var(--gold); }
+.wish-btn.is-on { color: var(--burgundy); }
+
+/* Text block: category / name / description on top, price + button pinned to the bottom so rows line up. */
+.product-info { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px 14px; flex: 1; }
+.product-cat { margin: 0; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+.product-name {
+  font-family: var(--font-ui); font-size: 1rem; font-weight: 500; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.product-desc { margin: 0; font-size: .85rem; line-height: 1.4; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.product-foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.product-price { margin: 0; font-weight: 600; font-size: 1.05rem; display: flex; gap: 8px; align-items: baseline; }
+.product-price s { font-weight: 400; color: var(--muted); font-size: .9rem; }
+.product-add { position: relative; z-index: 2; width: 100%; padding: 9px 16px; min-height: 44px; border-color: var(--gold); }
+.product-add:disabled { opacity: .55; cursor: not-allowed; }
+
+@media (max-width: 1000px) { .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  .product-info { padding: 10px 10px 12px; }
+  .product-name { font-size: .95rem; }
+}
+
+/* Shop grid sits beside the filter sidebar (sidebar shows at 901px and up). */
+.product-grid--shop { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 901px) and (max-width: 1099px) { .product-grid--shop { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .product-grid--shop { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .product-grid--shop { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Nine trending items: a lone last card is centred on the 2-column mobile layout (not used for filtered Shop results). */
+@media (max-width: 700px) { .product-grid:not(.product-grid--shop) > .product-card:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 6px); } }
+
+/* Keep the five Home page trending cards compact without changing other product grids. */
+@media (min-width: 1001px) {
+  .section--trending .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px 14px; }
+  .section--trending .product-media { aspect-ratio: 1 / 1; }
+  .section--trending .product-info { padding: 10px 11px 12px; gap: 2px; }
+  .section--trending .product-cat { font-size: .72rem; }
+  .section--trending .product-name { font-size: .94rem; }
+  .section--trending .product-desc { font-size: .8rem; }
+  .section--trending .product-foot { gap: 8px; }
+  .section--trending .product-price { gap: 5px; font-size: .98rem; }
+  .section--trending .product-price s { font-size: .8rem; }
+  .section--trending .product-add { min-height: 40px; padding: 8px 10px; font-size: .9rem; }
+  .section--trending .product-badge { top: 8px; left: 8px; padding: 3px 8px; font-size: .7rem; }
+}

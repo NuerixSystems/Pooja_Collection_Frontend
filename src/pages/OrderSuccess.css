@@ -1,0 +1,6 @@
+.order-done { max-width: 620px; margin: 0 auto; text-align: center; }
+.order-check { width: 64px; height: 64px; margin: 0 auto 16px; display: grid; place-items: center; border-radius: 50%; background: var(--burgundy); color: var(--champagne); font-size: 1.8rem; }
+.order-id { color: var(--burgundy); letter-spacing: .03em; }
+.order-card { text-align: left; margin: 24px 0; padding: 22px; background: var(--cream); border-radius: var(--radius); border: 1px solid rgba(184, 147, 90, .35); display: grid; gap: 14px; }
+.order-ship h2 { font-size: 1.3rem; margin-bottom: 4px; }
+.order-ship p { margin: 0; }

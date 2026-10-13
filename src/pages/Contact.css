@@ -1,0 +1,40 @@
+.contact-intro { margin: 0 0 18px; color: var(--muted); max-width: 640px; }
+.contact-channels { list-style: none; margin: 0 0 32px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.contact-card {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--radius);
+  background: var(--cream); border: 1px solid rgba(184, 147, 90, .35); color: var(--burgundy);
+  transition: border-color .15s, transform .15s;
+}
+.contact-card:hover { border-color: var(--gold); transform: translateY(-1px); }
+.contact-card svg { flex: none; color: var(--gold); }
+.contact-card span { display: grid; gap: 2px; min-width: 0; }
+.contact-card small { color: var(--muted); font-size: .88rem; overflow-wrap: anywhere; }
+.contact-single { max-width: 640px; }
+.contact-single .checkout-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+.pay-methods { border: 0; margin: 26px 0 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+.pay-methods legend { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; padding: 0; margin-bottom: 12px; }
+.pay-option {
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--radius);
+  background: #fff; border: 1px solid var(--line); cursor: pointer;
+}
+.pay-option.is-selected { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.pay-option input { margin-top: 4px; accent-color: var(--burgundy); }
+.pay-option span { display: grid; gap: 2px; }
+.pay-option small { color: var(--muted); }
+
+.upi-box { display: grid; gap: 10px; justify-items: center; padding: 20px 16px; border-radius: var(--radius); background: #fff; border: 1px solid var(--line); text-align: center; }
+.upi-qr { width: 200px; height: 200px; object-fit: contain; border-radius: 8px; background: #fff; }
+.upi-id, .upi-amount, .upi-note, .upi-missing { margin: 0; }
+.upi-amount { font-size: 1.1rem; }
+.upi-missing, .upi-note { color: var(--muted); font-size: .9rem; }
+.upi-steps { margin: 4px 0 0; padding-left: 20px; text-align: left; color: var(--muted); font-size: .92rem; display: grid; gap: 4px; justify-self: stretch; }
+.upi-box .field { justify-self: stretch; text-align: left; }
+
+.contact-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.contact-items li { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: start; }
+.contact-items img, .contact-items .safe-image-fallback { width: 52px; height: 66px; object-fit: cover; border-radius: 6px; font-size: 1.2rem; }
+.contact-item-body { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-width: 0; }
+.contact-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+@media (max-width: 700px) { .contact-channels { grid-template-columns: 1fr; } }

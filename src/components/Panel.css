@@ -1,0 +1,25 @@
+.panel-root { position: fixed; inset: 0; z-index: 100; }
+.panel-backdrop { position: absolute; inset: 0; background: rgba(63, 20, 38, 0.42); animation: fade .2s ease; }
+.panel {
+  position: absolute; background: var(--page); color: var(--burgundy);
+  overflow-y: auto; box-shadow: 0 20px 60px rgba(63, 20, 38, .25);
+}
+.panel-close {
+  position: absolute; top: 12px; right: 12px; width: 44px; height: 44px;
+  display: grid; place-items: center; border: 0; background: transparent; border-radius: 50%;
+}
+.panel-close:hover { background: var(--cream); }
+
+.panel--left, .panel--right { top: 0; bottom: 0; width: min(400px, 92vw); padding: 64px 24px 24px; }
+.panel--left { left: 0; animation: in-left .25s ease; }
+.panel--right { right: 0; animation: in-right .25s ease; display: flex; flex-direction: column; }
+.panel--top { top: 0; left: 0; right: 0; max-height: 85vh; padding: 56px 16px 24px; background: var(--cream); animation: in-top .22s ease; }
+.panel--center {
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(440px, 92vw); max-height: 92vh; padding: 40px 28px 28px; border-radius: 14px;
+}
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes in-left { from { transform: translateX(-100%); } }
+@keyframes in-right { from { transform: translateX(100%); } }
+@keyframes in-top { from { transform: translateY(-30px); opacity: 0; } }

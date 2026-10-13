@@ -1,0 +1,7 @@
+node_modules
+dist
+# Real env files stay local. Templates and the public dev defaults stay tracked.
+.env
+.env.*
+!.env.example
+!.env.development

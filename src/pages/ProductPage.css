@@ -1,0 +1,42 @@
+.crumbs { margin-bottom: 18px; font-size: .92rem; color: var(--muted); }
+.crumbs a { color: var(--burgundy); border-bottom: 1px solid var(--line); }
+.crumbs a:hover { border-bottom-color: var(--gold); }
+
+.product-page-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 40px; align-items: start; max-width: 960px; }
+.product-page-media {
+  position: relative; aspect-ratio: 1 / 1; width: 100%; overflow: hidden; border-radius: var(--radius);
+  background: var(--cream); border: 1px solid rgba(184, 147, 90, .3);
+}
+.product-page-media .product-img { width: 100%; height: 100%; object-fit: cover; }
+.product-page-media .product-badge { font-size: .85rem; }
+.product-page-info { display: grid; gap: 12px; align-content: start; }
+.product-page-info .product-cat { margin: 0; }
+.product-page-title { font-size: clamp(1.6rem, 3vw, 2.1rem); }
+.product-page-price { margin: 0; display: flex; gap: 10px; align-items: baseline; font-size: 1.3rem; font-weight: 600; }
+.product-page-price s { font-weight: 400; color: var(--muted); font-size: 1.05rem; }
+.product-page-desc { margin: 0; color: var(--muted); max-width: 52ch; }
+
+.design-picker { margin: 8px 0 0; padding: 0; border: 0; min-width: 0; }
+.design-picker legend { padding: 0; margin-bottom: 10px; font-weight: 600; }
+.design-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.design-option { position: relative; }
+.design-option span {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--gold); border-radius: 999px; background: transparent; cursor: pointer;
+}
+.design-option:hover span { background: rgba(184, 147, 90, .15); }
+.design-option input:checked + span { background: var(--burgundy); border-color: var(--burgundy); color: var(--cream); }
+.design-option input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 3px; }
+.design-picker .field-error { margin-top: 10px; }
+
+.product-page-actions { display: flex; gap: 12px; margin-top: 12px; }
+.product-page-add { flex: 1; min-height: 48px; font-size: 1.05rem; }
+.product-page-add:disabled { cursor: not-allowed; }
+.product-page-wish { min-height: 48px; }
+.product-page-wish.is-on { color: var(--burgundy); }
+
+@media (max-width: 760px) {
+  .product-page-layout { grid-template-columns: 1fr; gap: 22px; }
+  .product-page-media { max-width: 360px; }
+  .product-page-actions { flex-direction: column; }
+}

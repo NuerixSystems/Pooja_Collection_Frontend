@@ -1,0 +1,54 @@
+/* Filter controls: burgundy text, champagne-gold accents, thin borders. */
+.shop-filters { display: flex; flex-direction: column; }
+.filter-group { border-top: 1px solid var(--line); padding: 4px 0 14px; }
+.filter-group > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  min-height: 44px; font-size: .82rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--burgundy);
+}
+.filter-group > summary::-webkit-details-marker { display: none; }
+.filter-group > summary::after {
+  content: ''; width: 8px; height: 8px; margin-right: 4px; border-right: 2px solid var(--gold); border-bottom: 2px solid var(--gold);
+  transform: rotate(-135deg); transition: transform .2s ease;
+}
+.filter-group:not([open]) > summary::after { transform: rotate(45deg); }
+
+/* Category checkboxes */
+.filter-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.filter-check { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-size: .95rem; }
+.filter-check input { width: 18px; height: 18px; accent-color: var(--burgundy); flex: none; }
+.filter-check__name { flex: 1; min-width: 0; }
+.filter-check__count { color: var(--muted); font-size: .85rem; }
+
+/* Price */
+.price-filter__selected { margin: 0 0 6px; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; color: var(--burgundy); }
+.dual-range { position: relative; height: 32px; margin: 4px 10px 12px; }
+.dual-range__track { position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); border-radius: 4px; background: rgba(184, 147, 90, .3); }
+.dual-range__fill { position: absolute; top: 0; bottom: 0; left: var(--lo); right: calc(100% - var(--hi)); border-radius: 4px; background: var(--burgundy); }
+.dual-range input[type='range'] {
+  position: absolute; left: -10px; width: calc(100% + 20px); top: 0; height: 32px; margin: 0;
+  background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none;
+}
+.dual-range input[type='range']::-webkit-slider-runnable-track { background: transparent; height: 32px; }
+.dual-range input[type='range']::-moz-range-track { background: transparent; height: 32px; }
+.dual-range input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto; cursor: grab; margin-top: 5px;
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--burgundy); background: var(--page); box-shadow: 0 1px 4px rgba(63, 20, 38, .25);
+}
+.dual-range input[type='range']::-moz-range-thumb {
+  pointer-events: auto; cursor: grab; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--burgundy); background: var(--page); box-shadow: 0 1px 4px rgba(63, 20, 38, .25);
+}
+.dual-range input[type='range']:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--gold); outline-offset: 2px; }
+.dual-range input[type='range']:focus-visible::-moz-range-thumb { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (pointer: coarse) {
+  .dual-range input[type='range']::-webkit-slider-thumb { width: 28px; height: 28px; margin-top: 2px; }
+  .dual-range input[type='range']::-moz-range-thumb { width: 24px; height: 24px; }
+}
+
+.price-filter__inputs { display: flex; align-items: flex-end; gap: 8px; }
+.price-filter__to { padding-bottom: 12px; color: var(--muted); font-size: .9rem; }
+.price-input { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.price-input__label { font-size: .78rem; color: var(--muted); }
+.price-input__box { display: flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--burgundy); }
+.price-input__box:focus-within { border-color: var(--gold); outline: 2px solid rgba(184, 147, 90, .35); }
+.price-input__box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; -moz-appearance: textfield; }
+.price-input__box input::-webkit-outer-spin-button, .price-input__box input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }

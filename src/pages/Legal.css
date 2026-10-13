@@ -1,0 +1,6 @@
+.legal-page { max-width: 720px; }
+.legal-text { color: var(--muted); line-height: 1.7; margin: 0 0 24px; }
+.draft-notice {
+  margin: 0 0 20px; padding: 12px 16px; border-radius: var(--radius); border: 1px dashed var(--gold);
+  background: var(--cream); color: var(--burgundy); font-size: .95rem;
+}

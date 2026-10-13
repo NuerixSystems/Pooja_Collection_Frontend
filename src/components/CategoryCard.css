@@ -1,0 +1,43 @@
+/* Circular categories, auto-moving row (design only; each item is still a plain link) */
+.category-marquee { overflow: hidden; padding: 6px 0 4px; }
+.category-track { display: flex; width: max-content; animation: cat-scroll 28s linear infinite; }
+.category-marquee:hover .category-track,
+.category-marquee:focus-within .category-track { animation-play-state: paused; }
+.category-set { display: flex; flex-shrink: 0; }
+
+.cat-item {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  width: 168px; padding: 0 12px; text-align: center;
+}
+.cat-circle {
+  display: block; width: 132px; height: 132px; overflow: hidden; border-radius: 50%;
+  background: var(--cream); border: 2px solid var(--champagne);
+  box-shadow: 0 4px 14px rgba(90, 31, 54, .10);
+  transition: transform .25s ease, border-color .25s ease;
+}
+.category-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.cat-item:hover .cat-circle { transform: translateY(-3px); border-color: var(--gold); }
+.cat-item:hover .category-card-img { transform: scale(1.08); }
+.category-card-name {
+  font-size: .88rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+  line-height: 1.3; color: var(--burgundy);
+}
+.cat-item:hover .category-card-name { color: var(--gold); }
+
+.safe-image-fallback { display: grid; place-items: center; width: 100%; height: 100%; background: var(--cream); color: var(--gold); font-family: var(--font-display); font-size: 3rem; }
+
+@keyframes cat-scroll { to { transform: translateX(-50%); } }
+
+@media (max-width: 760px) {
+  .cat-item { width: 118px; padding: 0 8px; gap: 8px; }
+  .cat-circle { width: 94px; height: 94px; }
+  .category-card-name { font-size: .72rem; letter-spacing: .04em; }
+  .category-track { animation-duration: 22s; }
+}
+
+/* reduced motion: stop auto-moving, let people swipe/scroll the row themselves */
+@media (prefers-reduced-motion: reduce) {
+  .category-marquee { overflow-x: auto; }
+  .category-track { animation: none; }
+  .category-set[aria-hidden="true"] { display: none; }
+}
