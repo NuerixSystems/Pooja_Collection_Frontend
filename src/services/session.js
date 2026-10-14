@@ -38,6 +38,10 @@ export function saveSession(session) {
 }
 
 export function clearSession() {
+  // IMPORTANT: The backend cart is intentionally NOT cleared here.
+  // The customer's cart persists on the server, so the next login with the same
+  // account restores it. Only the local auth token is removed; StoreContext reacts
+  // by clearing its in-memory cart (UI shows empty after logout).
   try {
     localStorage.removeItem(KEY);
   } catch {

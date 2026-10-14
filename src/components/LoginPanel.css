@@ -1,10 +1,126 @@
-.auth-title { font-size: 1.9rem; margin-bottom: 16px; }
-.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
-.auth-tabs button { min-height: 44px; padding: 10px; border: 0; background: transparent; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.auth-tabs button[aria-selected='true'] { color: var(--burgundy); border-bottom-color: var(--gold); font-weight: 600; }
-.auth-form { display: grid; gap: 14px; }
-.auth-form label { display: grid; gap: 6px; font-size: .92rem; color: var(--muted); }
-.auth-form input { padding: 11px 14px; border: 1px solid rgba(90, 31, 54, .3); border-radius: 8px; background: #fff; font: inherit; color: var(--burgundy); }
-.auth-form input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-.auth-notice { margin: 0; padding: 10px 12px; background: var(--cream); border-radius: 8px; font-size: .9rem; }
-.auth-notice--cart { margin-bottom: 16px; }
+/* Login / Signup panel — full layout override.
+   global.css defines `.btn { display: inline-flex; ... }` which breaks the auth form
+   if not overridden here with higher specificity (.auth-form .btn beats .btn). */
+
+/* --- headings --- */
+.auth-title {
+  display: block;
+  font-family: var(--font-display, serif);
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--burgundy);
+  margin: 0 0 16px;
+  line-height: 1.15;
+}
+
+/* --- tabs --- */
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  border-bottom: 1px solid var(--line, #e5d9c3);
+  margin: 0 0 18px;
+}
+
+.auth-tabs button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted, #9a7d5f);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.auth-tabs button[aria-selected='true'] {
+  color: var(--burgundy);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+
+/* --- form (overrides global .btn inline-flex) --- */
+.auth-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+}
+
+.auth-form label {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  width: 100%;
+  font-size: 0.92rem;
+  color: var(--muted, #9a7d5f);
+}
+
+.auth-form input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1px solid rgba(90, 31, 54, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  color: var(--burgundy);
+}
+
+.auth-form input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* The submit button — force block + full width, unlike global .btn. */
+.auth-form .btn,
+.auth-form button[type='submit'] {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 4px;
+  padding: 12px 22px;
+  border-radius: 999px;
+}
+
+/* --- notices --- */
+.auth-notice {
+  display: block;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--cream, #faf6eb);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--burgundy);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-notice--cart {
+  margin-bottom: 16px;
+}
+
+.auth-notice--error {
+  color: #a4262c;
+}
+
+/* --- logged-in view --- */
+.auth-account-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 12px;
+  width: 100%;
+}
+
+.auth-account-links .btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+}

@@ -1,0 +1,259 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { CART } from '../config';
+import { apiEnabled } from '../services/api';
+import { getProductById } from '../services/catalog';
+import { getSession, getToken, subscribeSession } from '../services/session';
+import {
+  fetchServerCart,
+  migrateGuestCartToServer,
+  serverAddItem,
+  serverClearCart,
+  serverRemoveItem,
+  serverUpdateItem,
+} from '../services/cart';
+import { initialState, lineKey, reducer, sanitizeSaved } from './cartReducer';
+
+const STORAGE_KEY = 'pooja-collection:store:v1';
+
+function load() {
+  try {
+    return sanitizeSaved(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+  } catch {
+    /* storage unavailable or corrupt — start fresh */
+  }
+  return initialState;
+}
+
+const StoreContext = createContext(null);
+
+export function StoreProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, undefined, load);
+  const [serverCart, setServerCart] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  // Bumped on every session change (login / logout / cross-tab).
+  const [sessionKey, setSessionKey] = useState(0);
+
+  // Persist guest state to localStorage (wishlist is always local for now).
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      /* ignore quota / privacy-mode errors */
+    }
+  }, [state]);
+
+  // Guest lines used for one-time migration, read via ref so loadServerCart doesn't need
+  // to re-create on every cart mutation.
+  const guestLinesRef = useRef(state.cart);
+  useEffect(() => {
+    guestLinesRef.current = state.cart;
+  }, [state.cart]);
+
+  // Load the server cart now, and whenever the session changes (sessionKey bumps).
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadServerCart = async () => {
+      if (!apiEnabled() || !getToken()) {
+        if (!cancelled) setServerCart(null);
+        return;
+      }
+      try {
+        if (!cancelled) setBusy(true);
+
+        // 1. Migrate any guest cart lines to the server (once).
+        const guestLines = guestLinesRef.current;
+        if (guestLines.length) {
+          await migrateGuestCartToServer(guestLines);
+          dispatch({ type: 'cart/clear' });
+        }
+
+        // 2. Fetch the authoritative server cart.
+        const cart = await fetchServerCart();
+        if (!cancelled) setServerCart(cart);
+      } catch (err) {
+        console.error('[Store] loadServerCart failed:', err);
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    };
+
+    loadServerCart();
+
+    // Subscribe to session changes (login / logout / cross-tab storage event).
+    const unsub = subscribeSession(() => {
+      setSessionKey((k) => k + 1);
+    });
+
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [sessionKey]);
+
+  // Manual refresh used after failed mutations.
+  const refreshServerCart = useCallback(async () => {
+    if (!getToken()) {
+      setServerCart(null);
+      return;
+    }
+    try {
+      const cart = await fetchServerCart();
+      setServerCart(cart);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // isLoggedIn is derived from the session store; `sessionKey` changes ensure this recomputes
+  // after login/logout.
+  const isLoggedIn = useMemo(() => Boolean(getSession()), [sessionKey]);
+
+  const value = useMemo(() => {
+    // Effective cart: server cart when logged in, local otherwise.
+    let lines = [];
+
+    if (isLoggedIn && serverCart) {
+      lines = serverCart.items.flatMap((item) => {
+        const product = getProductById(item.product_id || item.id);
+        if (!product) return [];
+        const design = item.design_id
+          ? product.designs.find((d) => d.id === item.design_id) || null
+          : null;
+        if (item.design_id && !design) return [];
+        if (product.designs.length && !design) return [];
+        return [{
+          key: lineKey(item.product_id || item.id, item.design_id || null),
+          serverId: item.id,
+          product,
+          design,
+          qty: item.qty,
+        }];
+      });
+    } else {
+      lines = state.cart.flatMap((l) => {
+        const product = getProductById(l.id);
+        if (!product) return [];
+        const design = l.designId
+          ? product.designs.find((d) => d.id === l.designId) || null
+          : null;
+        if (l.designId && !design) return [];
+        if (product.designs.length && !design) return [];
+        return [{
+          key: l.key,
+          serverId: null,
+          product,
+          design,
+          qty: l.qty,
+        }];
+      });
+    }
+
+    const wishlistProducts = state.wishlist.map(getProductById).filter(Boolean);
+    const qtyOf = (id, designId = null) =>
+      lines.find((l) => l.key === lineKey(id, designId))?.qty ?? 0;
+
+    // ----- cart actions -----
+
+    const addToCart = (id, designId = null, qty = 1) => {
+      const product = getProductById(id);
+      if (!product) return { ok: false, reason: 'not-found' };
+      const wantsDesign = product.designs.length > 0;
+      if (wantsDesign && !product.designs.some((d) => d.id === designId)) {
+        return { ok: false, reason: 'design-required' };
+      }
+      if (apiEnabled() && !getToken()) return { ok: false, reason: 'login-required' };
+
+      const finalDesignId = wantsDesign ? designId : null;
+      if (qtyOf(id, finalDesignId) >= CART.maxQtyPerLine) {
+        return { ok: false, reason: 'max-qty' };
+      }
+
+      if (apiEnabled() && getToken()) {
+        setBusy(true);
+        serverAddItem({ productId: id, designId: finalDesignId, qty })
+          .then((cart) => setServerCart(cart))
+          .catch(() => refreshServerCart())
+          .finally(() => setBusy(false));
+        return { ok: true };
+      }
+
+      dispatch({ type: 'cart/add', id, designId: finalDesignId, qty });
+      return { ok: true };
+    };
+
+    const setQty = (key, qty) => {
+      const line = lines.find((l) => l.key === key);
+      if (!line) return;
+      if (isLoggedIn && line.serverId != null) {
+        setBusy(true);
+        const call = qty < 1
+          ? serverRemoveItem(line.serverId)
+          : serverUpdateItem(line.serverId, qty);
+        call.then((cart) => setServerCart(cart))
+          .catch(() => refreshServerCart())
+          .finally(() => setBusy(false));
+        return;
+      }
+      dispatch({ type: 'cart/setQty', key, qty });
+    };
+
+    const removeFromCart = (key) => {
+      const line = lines.find((l) => l.key === key);
+      if (!line) return;
+      if (isLoggedIn && line.serverId != null) {
+        setBusy(true);
+        serverRemoveItem(line.serverId)
+          .then((cart) => setServerCart(cart))
+          .catch(() => refreshServerCart())
+          .finally(() => setBusy(false));
+        return;
+      }
+      dispatch({ type: 'cart/remove', key });
+    };
+
+    const clearCart = () => {
+      if (isLoggedIn) {
+        setBusy(true);
+        serverClearCart()
+          .then(() => setServerCart({ items: [], subtotal: 0, count: 0 }))
+          .catch(() => {})
+          .finally(() => setBusy(false));
+        return;
+      }
+      dispatch({ type: 'cart/clear' });
+    };
+
+    const toggleWishlist = (id) => dispatch({ type: 'wishlist/toggle', id });
+
+    const cartCount = lines.reduce((n, l) => n + l.qty, 0);
+    const cartTotal = lines.reduce((sum, l) => sum + l.qty * l.product.price, 0);
+
+    return {
+      lines,
+      wishlist: wishlistProducts,
+      cartCount,
+      cartTotal,
+      wishlistCount: wishlistProducts.length,
+      maxQty: CART.maxQtyPerLine,
+      busy,
+      isWishlisted: (id) => state.wishlist.includes(id),
+      isAtMax: (id, designId = null) => qtyOf(id, designId) >= CART.maxQtyPerLine,
+      addToCart,
+      setQty,
+      removeFromCart,
+      clearCart,
+      toggleWishlist,
+      refreshServerCart,
+    };
+  }, [state, serverCart, busy, isLoggedIn, sessionKey, refreshServerCart]);
+
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+}
+
+export function useStore() {
+  const ctx = useContext(StoreContext);
+  if (!ctx) throw new Error('useStore must be used inside <StoreProvider>');
+  return ctx;
+}

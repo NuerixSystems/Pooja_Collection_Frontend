@@ -1,7 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BRAND, NAV_LINKS } from '../config';
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
+import { useIsLoggedIn } from '../hooks/useIsLoggedIn';
 import { HeartIcon, MenuIcon, SearchIcon, UserIcon } from './Icons';
 import './Header.css';
 
@@ -48,8 +49,17 @@ function IconLink({ label, to, count, active, className = '', children }) {
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { open } = useUI();
   const { cartCount, wishlistCount } = useStore();
+  const loggedIn = useIsLoggedIn();
+
+  // Logged in  -> a real link to /account.
+  // Guest      -> opens the login panel (same as before).
+  const handleAccount = () => {
+    if (loggedIn) navigate('/account');
+    else open('login');
+  };
 
   return (
     <header className="site-header">
@@ -75,10 +85,18 @@ export default function Header() {
 
         <div className="header-actions">
           <IconButton label="Search" onClick={() => open('search')}><SearchIcon size={26} /></IconButton>
-          <IconButton label="Log in" onClick={() => open('login')} className="hide-mobile"><UserIcon size={26} /></IconButton>
+
+          <IconButton
+            label={loggedIn ? 'My Account' : 'Log in'}
+            onClick={handleAccount}
+          >
+            <UserIcon size={26} />
+          </IconButton>
+
           <IconLink label="Wishlist" to="/wishlist" count={wishlistCount} active={location.pathname === '/wishlist'} className="wishlist-link">
             <HeartIcon size={26} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
           </IconLink>
+
           <IconButton label="Cart" onClick={() => open('cart')} count={cartCount}><CartIcon /></IconButton>
         </div>
       </div>

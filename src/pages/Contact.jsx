@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import QuantityStepper from '../components/QuantityStepper';
 import SafeImage from '../components/SafeImage';
 import { TrashIcon } from '../components/Icons';
@@ -9,6 +9,8 @@ import { useUI } from '../context/UIContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { ApiError } from '../services/api';
 import { placeOrderRemote } from '../services/orders';
+import { saveEnquiry } from '../services/enquiry';
+import { getProductBySlug } from '../services/catalog';
 import { CHECKOUT_FIELDS, normalizeIndianMobile, validateCheckout } from '../utils/checkout';
 import { formatPrice } from '../utils/format';
 import './CartPage.css';
@@ -19,7 +21,7 @@ const newRequestId = () =>
   globalThis.crypto?.randomUUID?.() ?? `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
 const UTR_RE = new RegExp(`^\\d{${UPI.utrLength}}$`);
-const MESSAGE_MAX = 350; // order notes are capped at 500 characters by the server; the payment line takes the rest
+const MESSAGE_MAX = 350;
 
 function WhatsAppIcon({ size = 22 }) {
   return (
@@ -67,7 +69,7 @@ function ContactChannels() {
   );
 }
 
-// Shown when the cart is empty: a general enquiry that opens WhatsApp with the message pre-filled.
+/** Generic enquiry form (no cart items). Simple name + phone + message → WhatsApp. */
 function EnquiryForm() {
   const [form, setForm] = useState({ name: '', phone: '', message: '' });
   const [errors, setErrors] = useState({});
@@ -118,13 +120,144 @@ function EnquiryForm() {
   );
 }
 
+/**
+ * Enquiry-mode panel: shown when /contact?enquiry=<slug> is opened (from "Place Enquiry"
+ * in the cart). Displays the product, takes customer details, saves the enquiry locally,
+ * and opens WhatsApp with a pre-filled message.
+ */
+function ProductEnquiry({ product, designId, qty }) {
+  const [form, setForm] = useState({ name: '', phone: '', whatsapp: '', email: '', address: '', message: '' });
+  const [errors, setErrors] = useState({});
+  const [saved, setSaved] = useState(null);
+
+  const design = designId ? product.designs?.find((d) => d.id === designId) : null;
+  const total = (product?.price || 0) * (Number(qty) || 1);
+
+  const submit = (e) => {
+    e.preventDefault();
+    const found = {};
+    if (!form.name.trim()) found.name = 'Enter your name.';
+    if (!form.phone.trim()) found.phone = 'Enter your mobile number.';
+    else if (!normalizeIndianMobile(form.phone)) found.phone = 'Enter a valid 10-digit mobile number.';
+    if (form.whatsapp.trim() && !normalizeIndianMobile(form.whatsapp)) found.whatsapp = 'Enter a valid 10-digit number.';
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) found.email = 'Enter a valid email.';
+    setErrors(found);
+    if (Object.keys(found).length) return;
+
+    const phone = normalizeIndianMobile(form.phone);
+    const whatsapp = form.whatsapp.trim() ? normalizeIndianMobile(form.whatsapp) : phone;
+
+    const message = [
+      `Hi ${BRAND.name}, I'd like to enquire about the following:`,
+      '',
+      `${product.name}${design ? ` (${design.label})` : ''} × ${qty} — ${formatPrice(total)}`,
+      '',
+      `Name: ${form.name.trim()}`,
+      phone && `Mobile: +91 ${phone}`,
+      form.email.trim() && `Email: ${form.email.trim()}`,
+      form.address.trim() && `Delivery address: ${form.address.trim()}`,
+      form.message.trim() && '',
+      form.message.trim(),
+    ].filter(Boolean).join('\n');
+
+    // Save the enquiry so "Your Enquiry List" can show it later.
+    const record = saveEnquiry({
+      product: { id: product.id, slug: product.slug, name: product.name, image: product.image },
+      design: design ? { id: design.id, label: design.label } : null,
+      qty: Number(qty) || 1,
+      customer: {
+        name: form.name.trim(),
+        phone,
+        whatsapp,
+        email: form.email.trim(),
+        address: form.address.trim(),
+        message: form.message.trim(),
+      },
+    });
+    setSaved(record);
+
+    window.open(`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  };
+
+  return (
+    <div className="cart-layout">
+      <form className="checkout-form" onSubmit={submit} noValidate>
+        <h2>Your enquiry</h2>
+        <p className="contact-intro">So the shop can call you back and confirm.</p>
+
+        <div className="field-grid">
+          <div className="field">
+            <label htmlFor="e-name">Your name <span aria-hidden>*</span></label>
+            <input id="e-name" value={form.name} aria-invalid={errors.name ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
+            {errors.name && <p className="field-error">{errors.name}</p>}
+          </div>
+          <div className="field">
+            <label htmlFor="e-phone">Mobile number <span aria-hidden>*</span></label>
+            <input id="e-phone" type="tel" inputMode="tel" value={form.phone} aria-invalid={errors.phone ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
+            {errors.phone && <p className="field-error">{errors.phone}</p>}
+          </div>
+          <div className="field">
+            <label htmlFor="e-wa">WhatsApp number</label>
+            <input id="e-wa" type="tel" inputMode="tel" value={form.whatsapp} aria-invalid={errors.whatsapp ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+            <small className="muted">Only if different from your mobile.</small>
+            {errors.whatsapp && <p className="field-error">{errors.whatsapp}</p>}
+          </div>
+          <div className="field">
+            <label htmlFor="e-email">Email (optional)</label>
+            <input id="e-email" type="email" value={form.email} aria-invalid={errors.email ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
+            {errors.email && <p className="field-error">{errors.email}</p>}
+          </div>
+          <div className="field field--wide">
+            <label htmlFor="e-addr">Delivery address (optional)</label>
+            <textarea id="e-addr" rows="3" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          </div>
+          <div className="field field--wide">
+            <label htmlFor="e-msg">Message (optional)</label>
+            <textarea id="e-msg" rows="3" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          </div>
+        </div>
+
+        <button type="submit" className="btn checkout-submit">
+          <WhatsAppIcon size={20} /> Send Request on WhatsApp
+        </button>
+        {saved && <p className="auth-notice" role="status">Saved to your enquiry list.</p>}
+      </form>
+
+      <aside className="summary" aria-label="Enquiry summary">
+        <h2>Enquiry summary</h2>
+        <ul className="contact-items">
+          <li>
+            <SafeImage src={product.image} alt="" label={product.name} />
+            <div className="contact-item-body">
+              <Link to={`/product/${product.slug}`} className="cart-page-name">{product.name}</Link>
+              {design && <small className="muted">Design: {design.label}</small>}
+              <small className="muted">× {qty}</small>
+            </div>
+            <div className="contact-item-side">
+              <strong>{formatPrice(total)}</strong>
+            </div>
+          </li>
+        </ul>
+        <p className="summary-row summary-total"><span>Estimated value</span><strong>{formatPrice(total)}</strong></p>
+        <Link to="/enquiry" className="btn btn--ghost">Your Enquiry List</Link>
+        <Link to="/shop" className="text-link summary-continue">Continue shopping</Link>
+      </aside>
+    </div>
+  );
+}
+
 export default function Contact() {
   const { lines, cartTotal, cartCount, maxQty, setQty, removeFromCart, clearCart } = useStore();
   const navigate = useNavigate();
   const { open } = useUI();
+  const [searchParams] = useSearchParams();
   const [values, setValues] = useState({});
   const [message, setMessage] = useState('');
-  const [payment, setPayment] = useState('cod'); // 'cod' | 'upi'
+  const [payment, setPayment] = useState('cod');
   const [utr, setUtr] = useState('');
   const [errors, setErrors] = useState({});
   const [focusRequest, setFocusRequest] = useState({ field: null, attempt: 0 });
@@ -139,8 +272,32 @@ export default function Contact() {
     if (focusRequest.field) inputs.current[focusRequest.field]?.focus();
   }, [focusRequest]);
 
+  // Enquiry mode is triggered by /contact?enquiry=<slug>[&design=<id>][&qty=<n>].
+  const enquirySlug = searchParams.get('enquiry');
+  const designId = searchParams.get('design');
+  const enquiryQty = searchParams.get('qty') || '1';
+  const enquiryProduct = useMemo(
+    () => (enquirySlug ? getProductBySlug(enquirySlug) : null),
+    [enquirySlug],
+  );
+
   const hasOrder = lines.length > 0;
 
+  // ----- enquiry mode: product-specific enquiry form -----
+  if (enquiryProduct) {
+    return (
+      <div className="container">
+        <section className="section">
+          <div className="section-head"><h1 className="section-title">Your Enquiry</h1></div>
+          <p className="contact-intro">So the shop can call you back and confirm.</p>
+          <ContactChannels />
+          <ProductEnquiry product={enquiryProduct} designId={designId} qty={enquiryQty} />
+        </section>
+      </div>
+    );
+  }
+
+  // ----- order submit -----
   const submit = async (e) => {
     e.preventDefault();
     if (submitting) return;
@@ -156,14 +313,18 @@ export default function Contact() {
       return;
     }
 
-    const paymentLine = payment === 'cod' ? 'Payment: Cash on Delivery' : `Payment: UPI/QR (UTR ${utr.trim()}) - verify before dispatch`;
-    const notes = [paymentLine, message.trim()].filter(Boolean).join('\n');
-    const customer = { ...clean, notes };
+    const customer = { ...clean, notes: message.trim() };
 
     setSubmitting(true);
     setSubmitError('');
     try {
-      const order = await placeOrderRemote({ customer, lines, clientRequestId: requestId.current });
+      const order = await placeOrderRemote({
+        customer,
+        lines,
+        clientRequestId: requestId.current,
+        paymentMethod: payment === 'cod' ? 'COD' : 'UPI',
+        utrId: payment === 'upi' ? utr.trim() : null,
+      });
       clearCart();
       navigate(`/order/${order.id}`, { replace: true });
     } catch (err) {

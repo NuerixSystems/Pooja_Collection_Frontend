@@ -47,6 +47,8 @@ export function reducer(state, action) {
       const has = state.wishlist.includes(action.id);
       return { ...state, wishlist: has ? state.wishlist.filter((i) => i !== action.id) : [...state.wishlist, action.id] };
     }
+    case 'wishlist/set':
+      return { ...state, wishlist: action.wishlist.filter((i) => typeof i === 'string') };
     default:
       return state;
   }

@@ -20,6 +20,11 @@ import Contact from './pages/Contact';
 import About from './pages/About';
 import { Privacy, ReturnPolicy, ShippingPolicy, Terms } from './pages/Legal';
 import NotFound from './pages/NotFound';
+import AccountPage from './pages/AccountPage';
+import EditProfilePage from './pages/EditProfilePage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import OrdersPage from './pages/OrdersPage';           // ← NEW
+import EnquiryPage from './pages/EnquiryPage';         // ← NEW
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useUI } from './context/UIContext';
 
@@ -36,8 +41,6 @@ function RouteEffects() {
   return null;
 }
 
-// Wraps only the page area, so a crash on one page leaves the header, cart and menu usable.
-// Keyed by pathname: navigating elsewhere clears the error.
 function Page({ children }) {
   const { pathname } = useLocation();
   return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
@@ -70,6 +73,16 @@ export default function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/return-policy" element={<ReturnPolicy />} />
+
+            {/* Account */}
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/account/edit" element={<EditProfilePage />} />
+            <Route path="/account/password" element={<ChangePasswordPage />} />
+
+            {/* Orders + Enquiries */}
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/enquiry" element={<EnquiryPage />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Page>

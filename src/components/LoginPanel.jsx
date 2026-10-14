@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CRM } from '../config';
 import { useUI } from '../context/UIContext';
 import { getProductById } from '../services/catalog';
@@ -10,7 +11,7 @@ import './LoginPanel.css';
 // With a backend configured (VITE_CRM_API_URL) this signs customers up / in against /api/auth/*.
 // Without one it stays the "coming soon" placeholder, so the storefront still works standalone.
 function LoginForm() {
-  const { pendingAdd } = useUI();
+  const { pendingAdd, close } = useUI();
   const [mode, setMode] = useState('login');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,16 +45,36 @@ function LoginForm() {
     }
   };
 
+  // ----- logged in -----
   if (session) {
     return (
       <>
         <h2 className="auth-title">Hi, {session.customer.name}</h2>
-        <p className="auth-notice" role="status">You're logged in. Your orders will be linked to your account.</p>
-        <button type="button" className="btn" onClick={() => { logout(); setSession(null); }}>Log out</button>
+        <p className="auth-notice" role="status">
+          You're logged in. Your orders will be linked to your account.
+        </p>
+
+        <div className="auth-account-links">
+          <Link to="/account" className="btn btn--ghost" onClick={close}>
+            My Account
+          </Link>
+          <Link to="/orders" className="btn btn--ghost" onClick={close}>
+            My Orders
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={() => { logout(); setSession(null); }}
+        >
+          Log out
+        </button>
       </>
     );
   }
 
+  // ----- not logged in -----
   return (
     <>
       <h2 className="auth-title">{isLogin ? 'Welcome back' : 'Create your account'}</h2>

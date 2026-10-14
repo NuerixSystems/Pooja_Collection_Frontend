@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
 import { formatPrice } from '../utils/format';
@@ -11,6 +11,16 @@ import './CartPanel.css';
 export default function CartPanel() {
   const { panel, close } = useUI();
   const { lines, cartTotal, cartCount, maxQty, setQty, removeFromCart } = useStore();
+  const navigate = useNavigate();
+
+  const handlePlaceEnquiry = () => {
+    if (!lines.length) return;
+    const first = lines[0];
+    const q = new URLSearchParams({ enquiry: first.product.slug, qty: String(first.qty) });
+    if (first.design?.id) q.set('design', first.design.id);
+    close();
+    navigate(`/contact?${q.toString()}`);
+  };
 
   return (
     <Panel open={panel === 'cart'} onClose={close} side="right" label="Shopping cart">
@@ -46,6 +56,9 @@ export default function CartPanel() {
           <div className="cart-footer">
             <p className="cart-total"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></p>
             <Link to="/contact" className="btn" onClick={close}>Checkout</Link>
+            <button type="button" className="btn btn--ghost" onClick={handlePlaceEnquiry}>
+              Place Enquiry
+            </button>
             <Link to="/cart" className="btn btn--ghost" onClick={close}>View cart</Link>
           </div>
         </>

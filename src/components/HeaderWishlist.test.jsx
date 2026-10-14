@@ -1,7 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { renderApp, seedCart } from '../test/utils';
+import { logout } from '../services/auth';
+import { saveSession } from '../services/session';
 
 const RING = 'gold-tulip-rings-3-set';
 const RING_NAME = 'Gold Tulip Rings - 3 Set';
@@ -100,6 +102,35 @@ describe('navbar wishlist heart', () => {
     await user.click(screen.getByRole('button', { name: new RegExp(`add ${RING_NAME} to wishlist`, 'i') }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(savedWishlist()).toEqual([RING]);
+  });
+
+  it('clears the visible wishlist on logout and restores it for the same customer', async () => {
+    const user = userEvent.setup();
+    renderApp('/shop');
+    act(() => saveSession({ token: 'first-token', customer: { id: 42, name: 'Pooja' } }));
+
+    await user.click(screen.getByRole('button', { name: new RegExp(`add ${RING_NAME} to wishlist`, 'i') }));
+    expect(heart()).toHaveAccessibleName('Wishlist (1)');
+
+    act(() => logout());
+    expect(heart()).toHaveAccessibleName('Wishlist');
+    expect(savedWishlist()).toEqual([]);
+
+    act(() => saveSession({ token: 'second-token', customer: { id: 42, name: 'Pooja' } }));
+    await waitFor(() => expect(heart()).toHaveAccessibleName('Wishlist (1)'));
+    expect(screen.getByRole('button', { name: new RegExp(`remove ${RING_NAME} from wishlist`, 'i') })).toBeInTheDocument();
+  });
+
+  it('does not show one customer wishlist to another customer', async () => {
+    const user = userEvent.setup();
+    renderApp('/shop');
+    act(() => saveSession({ token: 'first-token', customer: { id: 42, name: 'Pooja' } }));
+
+    await user.click(screen.getByRole('button', { name: new RegExp(`add ${RING_NAME} to wishlist`, 'i') }));
+    act(() => logout());
+    act(() => saveSession({ token: 'other-token', customer: { id: 43, name: 'Other' } }));
+
+    await waitFor(() => expect(heart()).toHaveAccessibleName('Wishlist'));
   });
 
   it('keeps the cart badge and the wishlist badge independent', () => {

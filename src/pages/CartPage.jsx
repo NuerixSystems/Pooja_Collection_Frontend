@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import QuantityStepper from '../components/QuantityStepper';
 import SafeImage from '../components/SafeImage';
 import { TrashIcon } from '../components/Icons';
@@ -9,6 +9,7 @@ import './CartPage.css';
 
 export default function CartPage() {
   const { lines, cartTotal, cartCount, maxQty, setQty, removeFromCart } = useStore();
+  const navigate = useNavigate();
   useDocumentTitle('Your cart');
 
   if (!lines.length) {
@@ -25,6 +26,16 @@ export default function CartPage() {
       </div>
     );
   }
+
+  // "Place Enquiry" starts a general enquiry for the first item in the cart, linking to the
+  // Contact page in enquiry mode. The Contact page then lets the customer add their details
+  // and send the request on WhatsApp.
+  const handlePlaceEnquiry = () => {
+    const first = lines[0];
+    const q = new URLSearchParams({ enquiry: first.product.slug, qty: String(first.qty) });
+    if (first.design?.id) q.set('design', first.design.id);
+    navigate(`/contact?${q.toString()}`);
+  };
 
   return (
     <div className="container">
@@ -61,6 +72,9 @@ export default function CartPage() {
             <p className="summary-row"><span>Subtotal ({cartCount} {cartCount === 1 ? 'item' : 'items'})</span><strong>{formatPrice(cartTotal)}</strong></p>
             <p className="summary-row summary-total"><span>Total</span><strong>{formatPrice(cartTotal)}</strong></p>
             <Link to="/contact" className="btn">Proceed to checkout</Link>
+            <button type="button" className="btn btn--ghost" onClick={handlePlaceEnquiry}>
+              Place Enquiry
+            </button>
             <Link to="/shop" className="text-link summary-continue">Continue shopping</Link>
           </aside>
         </div>

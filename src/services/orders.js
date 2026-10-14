@@ -30,8 +30,16 @@ function cache(order) {
 /**
  * Place an order on the backend. Throws ApiError (message is customer-friendly) on failure.
  * `clientRequestId` makes retries safe: the server returns the same order instead of creating a duplicate.
+ *
+ * `paymentMethod` is "COD" or "UPI"; `utrId` is the UPI transaction reference (required for UPI).
  */
-export async function placeOrderRemote({ customer, lines, clientRequestId }) {
+export async function placeOrderRemote({
+  customer,
+  lines,
+  clientRequestId,
+  paymentMethod = 'COD',
+  utrId = null,
+}) {
   let order;
   try {
     order = await api('/orders', {
@@ -39,7 +47,13 @@ export async function placeOrderRemote({ customer, lines, clientRequestId }) {
       body: {
         customer,
         clientRequestId,
-        items: lines.map(({ product, design, qty }) => ({ productId: product.id, designId: design?.id ?? null, qty })),
+        paymentMethod,
+        utrId,
+        items: lines.map(({ product, design, qty }) => ({
+          productId: product.id,
+          designId: design?.id ?? null,
+          qty,
+        })),
       },
     });
   } catch (err) {
@@ -56,3 +70,16 @@ export async function placeOrderRemote({ customer, lines, clientRequestId }) {
 }
 
 export const getOrder = (id) => readAll().find((o) => o.id === id) || null;
+
+/**
+ * Fetch the logged-in customer's orders from the backend.
+ * Returns an empty array for guests / expired sessions (never throws on 401).
+ */
+export async function fetchMyOrders() {
+  try {
+    return await api('/orders');
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) return [];
+    throw err;
+  }
+}
