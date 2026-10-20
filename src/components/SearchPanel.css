@@ -1,20 +1,188 @@
-.search { max-width: 720px; margin: 0 auto; }
-.search-form {
-  display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 18px;
-  background: var(--page); border: 1px solid var(--gold); border-radius: 999px;
+/* ============================================================
+   Search panel — top-sheet with live suggestions.
+   ============================================================ */
+
+.search {
+  max-width: 720px;
+  margin: 0 auto;
 }
-.search-form input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 1.05rem; color: var(--burgundy); padding: 10px 0; }
-.search-form input:focus { outline: none; }
-.search-form:focus-within { box-shadow: 0 0 0 3px rgba(184, 147, 90, .3); }
-.search-results { margin-top: 18px; }
-.search-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.chip { padding: 6px 14px; border: 1px solid var(--gold); border-radius: 999px; font-size: .92rem; background: transparent; }
-.chip:hover, .chip.is-active { background: var(--burgundy); border-color: var(--burgundy); color: var(--cream); }
-.search-empty { color: var(--muted); margin: 6px 0; }
-.search-list { list-style: none; margin: 0; padding: 0; }
-.search-list a { display: flex; align-items: center; gap: 14px; min-height: 44px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
-.search-list a:hover { background: rgba(184, 147, 90, .12); }
-.search-list img { width: 48px; height: 60px; object-fit: cover; border-radius: 6px; }
-.search-name { flex: 1; }
-.search-price { color: var(--muted); }
-@media (max-width: 760px) { .search-form .btn { padding: 9px 16px; } }
+
+/* ---------- Search input ---------- */
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 18px;
+  background: var(--page);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  transition: box-shadow 0.15s ease;
+}
+
+.search-form:focus-within {
+  box-shadow: 0 0 0 3px rgba(184, 147, 90, 0.3);
+}
+
+.search-form svg {
+  flex: none;
+  color: var(--gold);
+}
+
+.search-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--burgundy);
+  padding: 10px 0;
+}
+
+.search-form input:focus {
+  outline: none;
+}
+
+.search-form input::placeholder {
+  color: var(--muted);
+}
+
+/* Hide the browser's native clear button on type="search" */
+.search-form input::-webkit-search-cancel-button,
+.search-form input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ---------- Results area ---------- */
+.search-results {
+  margin-top: 18px;
+}
+
+/* Category chips (top of results) */
+.search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  font-size: 0.92rem;
+  background: transparent;
+  color: var(--burgundy);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.chip:hover,
+.chip.is-active {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+  color: var(--cream);
+}
+
+/* Empty state */
+.search-empty {
+  color: var(--muted);
+  margin: 6px 0;
+  font-size: 0.95rem;
+}
+
+/* ---------- Product list ---------- */
+.search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-list li + li a {
+  border-top: 1px solid var(--line);
+}
+
+.search-list a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 8px 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.search-list a:hover,
+.search-list a:focus-visible {
+  background: rgba(184, 147, 90, 0.12);
+  outline: none;
+}
+
+.search-list img {
+  width: 48px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: none;
+  background: var(--cream);
+}
+
+.search-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--burgundy);
+  /* Truncate long names on small screens */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-price {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+/* ---------- "See all results" link ---------- */
+.search-more {
+  margin: 14px 0 0;
+  text-align: right;
+}
+
+.search-more a {
+  color: var(--gold);
+  font-weight: 500;
+  font-size: 0.92rem;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+
+.search-more a:hover {
+  color: var(--burgundy);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .search-form {
+    padding: 4px 4px 4px 14px;
+    gap: 8px;
+  }
+
+  .search-form input {
+    font-size: 1rem;
+    padding: 8px 0;
+  }
+
+  .search-form .btn {
+    padding: 9px 16px;
+    font-size: 0.9rem;
+  }
+
+  .search-list img {
+    width: 44px;
+    height: 56px;
+  }
+}

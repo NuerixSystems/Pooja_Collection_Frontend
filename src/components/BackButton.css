@@ -1,0 +1,30 @@
+.back-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--burgundy, #6b2f12);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex: none;
+}
+
+.back-btn:hover {
+  background: rgba(184, 147, 90, 0.18);
+  color: var(--burgundy-deep, #4a1c0d);
+}
+
+.back-btn:focus-visible {
+  outline: 2px solid var(--gold, #c2831e);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .back-btn {
+    width: 40px;
+    height: 40px;
+  }
+}

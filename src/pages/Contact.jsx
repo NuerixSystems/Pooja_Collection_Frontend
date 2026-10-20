@@ -9,7 +9,7 @@ import { useUI } from '../context/UIContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { ApiError } from '../services/api';
 import { placeOrderRemote } from '../services/orders';
-import { saveEnquiry } from '../services/enquiry';
+import { submitEnquiry } from '../services/enquiries';
 import { getProductBySlug } from '../services/catalog';
 import { CHECKOUT_FIELDS, normalizeIndianMobile, validateCheckout } from '../utils/checkout';
 import { formatPrice } from '../utils/format';
@@ -69,71 +69,113 @@ function ContactChannels() {
   );
 }
 
-/** Generic enquiry form (no cart items). Simple name + phone + message → WhatsApp. */
+/** Generic enquiry form (no cart items). Now submits to the backend. */
 function EnquiryForm() {
-  const [form, setForm] = useState({ name: '', phone: '', message: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const found = {};
     if (!form.name.trim()) found.name = 'Enter your name.';
-    if (form.phone.trim() && !normalizeIndianMobile(form.phone)) found.phone = 'Enter a valid 10-digit mobile number.';
+    if (!form.phone.trim()) found.phone = 'Enter your mobile number.';
+    else if (!normalizeIndianMobile(form.phone)) found.phone = 'Enter a valid 10-digit mobile number.';
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) found.email = 'Enter a valid email.';
     if (!form.message.trim()) found.message = 'Write your message.';
     setErrors(found);
     if (Object.keys(found).length) return;
-    const text = [
-      `Hi ${BRAND.name}, I'm ${form.name.trim()}.`,
-      form.phone.trim() && `My number: ${form.phone.trim()}`,
-      '',
-      form.message.trim(),
-    ].filter((l) => l !== false).join('\n');
-    window.open(`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+
+    setSubmitting(true);
+    try {
+      // Send as an enquiry with a "note" item (no product). The backend accepts product-less enquiries.
+      // For now, only customer details are sent — the shop will call back.
+      await submitEnquiry({
+        customer: {
+          name: form.name.trim(),
+          phone: normalizeIndianMobile(form.phone),
+          whatsapp: '',
+          email: form.email.trim(),
+          address: '',
+          message: form.message.trim(),
+        },
+        items: [],
+      });
+      setShowSuccess(true);
+      setForm({ name: '', phone: '', email: '', message: '' });
+    } catch (err) {
+      setErrors({ submit: err.message || 'Could not send your message.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <form className="checkout-form" id="enquiry" onSubmit={submit} noValidate>
-      <h2>Send us a message</h2>
-      <div className="field-grid">
-        <div className="field">
-          <label htmlFor="q-name">Your name</label>
-          <input id="q-name" value={form.name} aria-invalid={errors.name ? 'true' : undefined}
-            onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
-          {errors.name && <p className="field-error">{errors.name}</p>}
+    <>
+      <form className="checkout-form" id="enquiry" onSubmit={submit} noValidate>
+        <h2>Send us a message</h2>
+        <div className="field-grid">
+          <div className="field">
+            <label htmlFor="q-name">Your name</label>
+            <input id="q-name" value={form.name} aria-invalid={errors.name ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
+            {errors.name && <p className="field-error">{errors.name}</p>}
+          </div>
+          <div className="field">
+            <label htmlFor="q-phone">Mobile number</label>
+            <input id="q-phone" type="tel" inputMode="tel" value={form.phone} aria-invalid={errors.phone ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
+            {errors.phone && <p className="field-error">{errors.phone}</p>}
+          </div>
+          <div className="field field--wide">
+            <label htmlFor="q-email">Email (optional)</label>
+            <input id="q-email" type="email" value={form.email} aria-invalid={errors.email ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
+            {errors.email && <p className="field-error">{errors.email}</p>}
+          </div>
+          <div className="field field--wide">
+            <label htmlFor="q-msg">Message</label>
+            <textarea id="q-msg" rows="5" value={form.message} aria-invalid={errors.message ? 'true' : undefined}
+              onChange={(e) => setForm({ ...form, message: e.target.value })} />
+            {errors.message && <p className="field-error">{errors.message}</p>}
+          </div>
         </div>
-        <div className="field">
-          <label htmlFor="q-phone">Mobile number (optional)</label>
-          <input id="q-phone" type="tel" inputMode="tel" value={form.phone} aria-invalid={errors.phone ? 'true' : undefined}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
-          {errors.phone && <p className="field-error">{errors.phone}</p>}
+        {errors.submit && <p className="field-error" role="alert">{errors.submit}</p>}
+        <button type="submit" className="btn checkout-submit" disabled={submitting}>
+          {submitting ? 'Sending…' : 'Send Message'}
+        </button>
+      </form>
+
+      {showSuccess && (
+        <div className="enquiry-success-modal" role="dialog" aria-modal="true" onClick={() => setShowSuccess(false)}>
+          <div className="enquiry-success-box" onClick={(e) => e.stopPropagation()}>
+            <div className="enquiry-success-icon">✅</div>
+            <h3>Message Sent Successfully!</h3>
+            <p>We received your message. The shop will contact you soon.</p>
+            <button type="button" className="btn" onClick={() => setShowSuccess(false)}>OK</button>
+          </div>
         </div>
-        <div className="field field--wide">
-          <label htmlFor="q-msg">Message</label>
-          <textarea id="q-msg" rows="5" value={form.message} aria-invalid={errors.message ? 'true' : undefined}
-            onChange={(e) => setForm({ ...form, message: e.target.value })} />
-          {errors.message && <p className="field-error">{errors.message}</p>}
-        </div>
-      </div>
-      <p className="form-hint">This opens WhatsApp with your message ready to send. Nothing is stored on this website.</p>
-      <button type="submit" className="btn checkout-submit"><WhatsAppIcon size={20} /> Send on WhatsApp</button>
-    </form>
+      )}
+    </>
   );
 }
 
 /**
- * Enquiry-mode panel: shown when /contact?enquiry=<slug> is opened (from "Place Enquiry"
- * in the cart). Displays the product, takes customer details, saves the enquiry locally,
- * and opens WhatsApp with a pre-filled message.
+ * Product enquiry: shown when /contact?enquiry=<slug> is opened.
+ * Submits to the backend (no WhatsApp redirect), shows a success popup.
  */
 function ProductEnquiry({ product, designId, qty }) {
   const [form, setForm] = useState({ name: '', phone: '', whatsapp: '', email: '', address: '', message: '' });
   const [errors, setErrors] = useState({});
-  const [saved, setSaved] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [enquiryId, setEnquiryId] = useState(null);
 
   const design = designId ? product.designs?.find((d) => d.id === designId) : null;
   const total = (product?.price || 0) * (Number(qty) || 1);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const found = {};
     if (!form.name.trim()) found.name = 'Enter your name.';
@@ -144,109 +186,119 @@ function ProductEnquiry({ product, designId, qty }) {
     setErrors(found);
     if (Object.keys(found).length) return;
 
-    const phone = normalizeIndianMobile(form.phone);
-    const whatsapp = form.whatsapp.trim() ? normalizeIndianMobile(form.whatsapp) : phone;
+    setSubmitting(true);
+    try {
+      const enquiry = await submitEnquiry({
+        customer: {
+          name: form.name.trim(),
+          phone: normalizeIndianMobile(form.phone),
+          whatsapp: form.whatsapp ? normalizeIndianMobile(form.whatsapp) : '',
+          email: form.email.trim(),
+          address: form.address.trim(),
+          message: form.message.trim(),
+        },
+        items: [
+          {
+            productId: product.slug,
+            designId: design?.id || null,
+            qty: Number(qty) || 1,
+          },
+        ],
+      });
 
-    const message = [
-      `Hi ${BRAND.name}, I'd like to enquire about the following:`,
-      '',
-      `${product.name}${design ? ` (${design.label})` : ''} × ${qty} — ${formatPrice(total)}`,
-      '',
-      `Name: ${form.name.trim()}`,
-      phone && `Mobile: +91 ${phone}`,
-      form.email.trim() && `Email: ${form.email.trim()}`,
-      form.address.trim() && `Delivery address: ${form.address.trim()}`,
-      form.message.trim() && '',
-      form.message.trim(),
-    ].filter(Boolean).join('\n');
-
-    // Save the enquiry so "Your Enquiry List" can show it later.
-    const record = saveEnquiry({
-      product: { id: product.id, slug: product.slug, name: product.name, image: product.image },
-      design: design ? { id: design.id, label: design.label } : null,
-      qty: Number(qty) || 1,
-      customer: {
-        name: form.name.trim(),
-        phone,
-        whatsapp,
-        email: form.email.trim(),
-        address: form.address.trim(),
-        message: form.message.trim(),
-      },
-    });
-    setSaved(record);
-
-    window.open(`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+      setEnquiryId(enquiry.id);
+      setShowSuccess(true);
+      setForm({ name: '', phone: '', whatsapp: '', email: '', address: '', message: '' });
+    } catch (err) {
+      setErrors({ submit: err.message || 'Could not send your enquiry.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="cart-layout">
-      <form className="checkout-form" onSubmit={submit} noValidate>
-        <h2>Your enquiry</h2>
-        <p className="contact-intro">So the shop can call you back and confirm.</p>
+    <>
+      <div className="cart-layout">
+        <form className="checkout-form" onSubmit={submit} noValidate>
+          <h2>Your enquiry</h2>
+          <p className="contact-intro">So the shop can call you back and confirm.</p>
 
-        <div className="field-grid">
-          <div className="field">
-            <label htmlFor="e-name">Your name <span aria-hidden>*</span></label>
-            <input id="e-name" value={form.name} aria-invalid={errors.name ? 'true' : undefined}
-              onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
-            {errors.name && <p className="field-error">{errors.name}</p>}
+          <div className="field-grid">
+            <div className="field">
+              <label htmlFor="e-name">Your name <span aria-hidden>*</span></label>
+              <input id="e-name" value={form.name} aria-invalid={errors.name ? 'true' : undefined}
+                onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
+              {errors.name && <p className="field-error">{errors.name}</p>}
+            </div>
+            <div className="field">
+              <label htmlFor="e-phone">Mobile number <span aria-hidden>*</span></label>
+              <input id="e-phone" type="tel" inputMode="tel" value={form.phone} aria-invalid={errors.phone ? 'true' : undefined}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
+              {errors.phone && <p className="field-error">{errors.phone}</p>}
+            </div>
+            <div className="field">
+              <label htmlFor="e-wa">WhatsApp number</label>
+              <input id="e-wa" type="tel" inputMode="tel" value={form.whatsapp} aria-invalid={errors.whatsapp ? 'true' : undefined}
+                onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+              <small className="muted">Only if different from your mobile.</small>
+              {errors.whatsapp && <p className="field-error">{errors.whatsapp}</p>}
+            </div>
+            <div className="field">
+              <label htmlFor="e-email">Email (optional)</label>
+              <input id="e-email" type="email" value={form.email} aria-invalid={errors.email ? 'true' : undefined}
+                onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
+              {errors.email && <p className="field-error">{errors.email}</p>}
+            </div>
+            <div className="field field--wide">
+              <label htmlFor="e-addr">Delivery address (optional)</label>
+              <textarea id="e-addr" rows="3" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            </div>
+            <div className="field field--wide">
+              <label htmlFor="e-msg">Message (optional)</label>
+              <textarea id="e-msg" rows="3" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="e-phone">Mobile number <span aria-hidden>*</span></label>
-            <input id="e-phone" type="tel" inputMode="tel" value={form.phone} aria-invalid={errors.phone ? 'true' : undefined}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
-            {errors.phone && <p className="field-error">{errors.phone}</p>}
-          </div>
-          <div className="field">
-            <label htmlFor="e-wa">WhatsApp number</label>
-            <input id="e-wa" type="tel" inputMode="tel" value={form.whatsapp} aria-invalid={errors.whatsapp ? 'true' : undefined}
-              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-            <small className="muted">Only if different from your mobile.</small>
-            {errors.whatsapp && <p className="field-error">{errors.whatsapp}</p>}
-          </div>
-          <div className="field">
-            <label htmlFor="e-email">Email (optional)</label>
-            <input id="e-email" type="email" value={form.email} aria-invalid={errors.email ? 'true' : undefined}
-              onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
-            {errors.email && <p className="field-error">{errors.email}</p>}
-          </div>
-          <div className="field field--wide">
-            <label htmlFor="e-addr">Delivery address (optional)</label>
-            <textarea id="e-addr" rows="3" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          </div>
-          <div className="field field--wide">
-            <label htmlFor="e-msg">Message (optional)</label>
-            <textarea id="e-msg" rows="3" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+
+          {errors.submit && <p className="field-error" role="alert">{errors.submit}</p>}
+          <button type="submit" className="btn checkout-submit" disabled={submitting}>
+            {submitting ? 'Sending your enquiry…' : 'Submit Enquiry'}
+          </button>
+        </form>
+
+        <aside className="summary" aria-label="Enquiry summary">
+          <h2>Enquiry summary</h2>
+          <ul className="contact-items">
+            <li>
+              <SafeImage src={product.image} alt="" label={product.name} />
+              <div className="contact-item-body">
+                <Link to={`/product/${product.slug}`} className="cart-page-name">{product.name}</Link>
+                {design && <small className="muted">Design: {design.label}</small>}
+                <small className="muted">× {qty}</small>
+              </div>
+              <div className="contact-item-side">
+                <strong>{formatPrice(total)}</strong>
+              </div>
+            </li>
+          </ul>
+          <p className="summary-row summary-total"><span>Estimated value</span><strong>{formatPrice(total)}</strong></p>
+          <Link to="/enquiry" className="btn btn--ghost">Your Enquiry List</Link>
+          <Link to="/shop" className="text-link summary-continue">Continue shopping</Link>
+        </aside>
+      </div>
+
+      {showSuccess && (
+        <div className="enquiry-success-modal" role="dialog" aria-modal="true" onClick={() => setShowSuccess(false)}>
+          <div className="enquiry-success-box" onClick={(e) => e.stopPropagation()}>
+            <div className="enquiry-success-icon">✅</div>
+            <h3>Enquiry Submitted Successfully!</h3>
+            <p>We received your enquiry for <strong>{product.name}</strong>.</p>
+            <p className="muted">The shop will contact you on WhatsApp soon.</p>
+            {enquiryId && <p className="muted">Enquiry #{enquiryId}</p>}
+            <button type="button" className="btn" onClick={() => setShowSuccess(false)}>OK</button>
           </div>
         </div>
-
-        <button type="submit" className="btn checkout-submit">
-          <WhatsAppIcon size={20} /> Send Request on WhatsApp
-        </button>
-        {saved && <p className="auth-notice" role="status">Saved to your enquiry list.</p>}
-      </form>
-
-      <aside className="summary" aria-label="Enquiry summary">
-        <h2>Enquiry summary</h2>
-        <ul className="contact-items">
-          <li>
-            <SafeImage src={product.image} alt="" label={product.name} />
-            <div className="contact-item-body">
-              <Link to={`/product/${product.slug}`} className="cart-page-name">{product.name}</Link>
-              {design && <small className="muted">Design: {design.label}</small>}
-              <small className="muted">× {qty}</small>
-            </div>
-            <div className="contact-item-side">
-              <strong>{formatPrice(total)}</strong>
-            </div>
-          </li>
-        </ul>
-        <p className="summary-row summary-total"><span>Estimated value</span><strong>{formatPrice(total)}</strong></p>
-        <Link to="/enquiry" className="btn btn--ghost">Your Enquiry List</Link>
-        <Link to="/shop" className="text-link summary-continue">Continue shopping</Link>
-      </aside>
-    </div>
+      )}
+    </>
   );
 }
 
@@ -272,7 +324,7 @@ export default function Contact() {
     if (focusRequest.field) inputs.current[focusRequest.field]?.focus();
   }, [focusRequest]);
 
-  // Enquiry mode is triggered by /contact?enquiry=<slug>[&design=<id>][&qty=<n>].
+  // Enquiry mode: /contact?enquiry=<slug>&design=<id>&qty=<n>
   const enquirySlug = searchParams.get('enquiry');
   const designId = searchParams.get('design');
   const enquiryQty = searchParams.get('qty') || '1';
@@ -283,7 +335,7 @@ export default function Contact() {
 
   const hasOrder = lines.length > 0;
 
-  // ----- enquiry mode: product-specific enquiry form -----
+  // ----- enquiry mode -----
   if (enquiryProduct) {
     return (
       <div className="container">

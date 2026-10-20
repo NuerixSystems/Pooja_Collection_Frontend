@@ -13,13 +13,10 @@ const isAllowed = (slug) => !excluded.has(String(slug).toLowerCase());
 export const imageUrl = (path) => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
-  // `CRM.mediaUrl` points at the backend root (e.g. http://localhost:8000) since the API
-  // returns fully-qualified paths like /media/pooja/products/x.webp.
   return `${(CRM.mediaUrl || CRM.apiUrl).replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 // A product only has selectable designs when the data lists them explicitly as [{ id, label }].
-// Never derive designs from description text: availability per design is not known to the storefront.
 const cleanDesigns = (designs) => {
   if (!Array.isArray(designs)) return [];
   const seen = new Set();
@@ -62,8 +59,7 @@ export function setCatalog(data) {
 }
 
 /**
- * Load the catalogue from the backend. Never throws; returns true when it loaded, false on any problem
- * (no API configured, network error, timeout, malformed response). Nothing is cached in the browser.
+ * Load the catalogue from the backend. Never throws; returns true when it loaded, false on any problem.
  * @returns {Promise<boolean>}
  */
 export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
@@ -142,11 +138,54 @@ export function getProducts({ categorySlug, categorySlugs, query, collection, so
   return SORTERS[sort] ? [...list].sort(SORTERS[sort]) : list;
 }
 
-export function searchSuggestions(query, limit = 5) {
-  const q = query.trim().toLowerCase();
+/**
+ * Live search suggestions with relevance ranking.
+ *
+ * Score:
+ *   1000 — exact product name match
+ *    500 — product name starts with the query
+ *    300 — product name contains the query
+ *    200 — category name starts with the query
+ *    150 — category name contains the query
+ *    100 — product tag matches
+ *     50 — product description contains the query
+ *
+ * Ties broken by shorter product names first.
+ */
+export function searchSuggestions(query, limit = 8) {
+  const q = (query || '').trim().toLowerCase();
   if (!q) return { categories: [], products: [] };
+
+  const catName = (slug) => getCategory(slug)?.name.toLowerCase() || '';
+
+  const scored = products
+    .map((p) => {
+      const name = (p.name || '').toLowerCase();
+      const desc = (p.description || '').toLowerCase();
+      const cat = catName(p.categorySlug);
+      const tag = (p.tag || '').toLowerCase();
+
+      let score = 0;
+      if (name === q) score = 1000;
+      else if (name.startsWith(q)) score = 500;
+      else if (name.includes(q)) score = 300;
+      else if (cat.startsWith(q)) score = 200;
+      else if (cat.includes(q)) score = 150;
+      else if (tag.includes(q)) score = 100;
+      else if (desc.includes(q)) score = 50;
+
+      return { product: p, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (a.product.name || '').length - (b.product.name || '').length;
+    })
+    .slice(0, limit)
+    .map(({ product }) => product);
+
   return {
     categories: categories.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 3),
-    products: getProducts({ query: q }).slice(0, limit),
+    products: scored,
   };
 }

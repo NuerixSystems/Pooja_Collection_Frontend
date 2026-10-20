@@ -38,3 +38,75 @@
 .contact-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
 @media (max-width: 700px) { .contact-channels { grid-template-columns: 1fr; } }
+
+
+/* ---------- Enquiry success popup ---------- */
+.enquiry-success-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(63, 20, 38, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  animation: fade-in 0.2s ease;
+}
+
+.enquiry-success-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 70px rgba(63, 20, 38, 0.4);
+  animation: pop-in 0.25s ease;
+}
+
+.enquiry-success-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.enquiry-success-box h3 {
+  margin: 0 0 0.75rem;
+  color: var(--burgundy, #6b2f12);
+  font-family: var(--font-display, serif);
+  font-size: 1.5rem;
+}
+
+.enquiry-success-box p {
+  margin: 0 0 0.5rem;
+  color: var(--muted, #9a7d5f);
+  font-size: 0.95rem;
+}
+
+.enquiry-success-box p:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.enquiry-success-box strong {
+  color: var(--burgundy, #6b2f12);
+}
+
+.enquiry-success-box .btn {
+  min-width: 140px;
+  padding: 12px 32px;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
