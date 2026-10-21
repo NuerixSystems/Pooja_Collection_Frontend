@@ -36,7 +36,7 @@ describe('hydrateCatalog', () => {
       }),
     );
     expect(await hydrateCatalog()).toBe(true);
-    expect(calls()[0][0]).toBe('http://api.test/api/catalog'); // trailing slash in the base URL is handled
+    expect(calls()[0][0]).toBe('http://api.test/api/pooja/catalog');
     expect(getProducts().map((p) => p.slug)).toEqual(['live-ring']);
     expect(getCategories().map((c) => c.slug)).toEqual(['rings']);
     expect(getProducts()[0]).toMatchObject({ isNew: true, designs: [{ id: 'a', label: 'A' }], image: 'http://api.test/media/products/live-ring.webp' });

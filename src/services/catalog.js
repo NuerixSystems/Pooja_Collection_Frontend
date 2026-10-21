@@ -1,6 +1,6 @@
 // Catalogue access layer. Components only talk to this file.
 // There is no bundled catalogue: categories, products and image URLs all come from the backend
-// (GET /catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
+// (GET /api/pooja/catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
 // retry screen if the backend can't be reached.
 
 import { CRM, EXCLUDED_CATEGORY_SLUGS, HIDDEN_TAGS } from '../config';
@@ -28,7 +28,7 @@ const FEATURED_TAGS = ['Best Seller', 'Trending', 'Viral', 'Premium', 'New Arriv
 let products = [];
 let categories = [];
 
-/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /catalog). */
+/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /api/pooja/catalog). */
 export function setCatalog(data) {
   const nextProducts = data.products
     .filter((p) => isAllowed(p.categorySlug))
@@ -67,7 +67,7 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/catalog`, { signal: controller.signal });
+    const res = await fetch(new URL('/api/pooja/catalog', CRM.apiUrl).toString(), { signal: controller.signal });
     if (!res.ok) return false;
     const data = await res.json();
     if (!Array.isArray(data?.products) || !Array.isArray(data?.categories)) return false;
