@@ -10,19 +10,104 @@
 .footer-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--champagne); margin: 0 0 14px; position: relative; padding-bottom: 10px; }
 .footer-title::after { content: ''; position: absolute; left: 0; bottom: 0; width: 28px; height: 2px; background: var(--gold); }
 .footer-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.footer-list a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: rgba(245, 237, 226, .88); transition: color .15s, transform .15s; }
+.footer-list a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: rgba(245, 237, 226, .88); transition: color .15s, transform .15s; text-decoration: none;}
 .footer-list a:hover { color: var(--champagne); transform: translateX(3px); }
-.footer-list .footer-all { color: var(--champagne); font-weight: 500; }
+
+/* Styling for the View All Categories button */
+.footer-all-btn {
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+  min-height: 36px; 
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--champagne); 
+  font-weight: 500;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: color .15s, transform .15s;
+}
+.footer-all-btn:hover { 
+  color: #fff; 
+  transform: translateX(3px); 
+}
+.rotate-icon {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Default Social Icon Style */
 .footer-social { display: flex; gap: 12px; }
 .footer-social a {
-  width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%;
-  border: 1px solid rgba(217, 191, 142, .5); color: var(--champagne); transition: background .15s, color .15s, transform .15s;
+  width: 44px; 
+  height: 44px; 
+  display: grid; 
+  place-items: center; 
+  border-radius: 50%;
+  border: 1px solid rgba(217, 191, 142, .5); 
+  color: var(--champagne); 
+  transition: all .2s ease;
+  background: transparent;
 }
-.footer-social a:hover { background: var(--champagne); color: var(--burgundy-deep); transform: translateY(-2px); }
+
+/* Base hover effect (slight lift) */
+.footer-social a:hover {
+  transform: translateY(-2px);
+}
+
+/* --- Brand Official Colors (Default State) --- */
+
+/* YouTube Official Red */
+.footer-social a.social-youtube { 
+  color: #FF0000; 
+  border-color: rgba(255, 0, 0, 0.4);
+}
+.footer-social a.social-youtube:hover {
+  background: #FF0000;
+  border-color: #FF0000;
+  color: #fff;
+}
+
+/* WhatsApp Official Green */
+.footer-social a.social-whatsapp { 
+  color: #25D366; 
+  border-color: rgba(37, 211, 102, 0.4);
+}
+.footer-social a.social-whatsapp:hover {
+  background: #25D366;
+  border-color: #25D366;
+  color: #fff;
+}
+
+/* Instagram Gradient - The gradient is applied in the SVG itself, 
+   but we brighten the border on hover to match */
+.footer-social a.social-insta {
+  border-color: rgba(214, 41, 118, 0.4);
+}
+.footer-social a.social-insta:hover {
+  border-color: #D62976;
+  background: rgba(214, 41, 118, 0.1);
+}
+
 .footer-phone { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 12px; color: rgba(245, 237, 226, .88); }
 .footer-phone:hover { color: var(--champagne); }
 .footer-bottom { border-top: 1px solid rgba(217, 191, 142, .25); padding: 16px; text-align: center; font-size: .85rem; color: rgba(245, 237, 226, .7); }
 .footer-bottom p { margin: 0; }
+
+/* Styling for the Powered by Nuerix Digital link */
+.footer-powered {
+  color: var(--champagne); 
+  font-weight: 500;
+  transition: color 0.15s ease;
+  text-decoration: none;
+}
+
+.footer-powered:hover {
+  color: #fff;
+  text-decoration: underline;
+}
 
 @media (max-width: 1000px) {
   .footer-grid { grid-template-columns: repeat(3, 1fr); }

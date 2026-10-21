@@ -141,6 +141,39 @@
 .about-acc-btn b { color: var(--champagne); font-size: 1.4rem; line-height: 1; }
 .about-acc-panel { padding: 0 20px 20px 52px; color: rgba(255, 255, 255, .8); line-height: 1.6; }
 
+/* ---------- Google Business Cards ---------- */
+.about-card--google {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  border: 1.5px solid rgba(217, 191, 142, .45); /* Slightly thicker border */
+  position: relative;
+}
+
+.about-card--google:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(90, 31, 54, .12);
+  border-color: var(--ab-accent);
+  background: #fffdfa; /* Slight highlight on hover */
+}
+
+.about-google-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  font-weight: 600;
+  color: var(--burgundy);
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.about-card--google:hover .about-google-link {
+  color: var(--ab-accent);
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 1000px) {
   .about-four { grid-template-columns: repeat(2, 1fr); }

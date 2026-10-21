@@ -116,22 +116,35 @@ export default function About() {
         </div>
       </section>
 
-      {/* Mission & vision */}
+      {/* Google Business Section */}
       <section className="about-block container">
         <div className="about-head">
-          <p className="about-eyebrow">Our purpose</p>
-          <h2>What drives us</h2>
+          <p className="about-eyebrow">Find us online</p>
+          <h2>Google Business</h2>
           <span className="about-rule" />
         </div>
         <div className="about-two">
+          
+          {/* Left Side: Informational (Not clickable) */}
           <article className="about-card about-card--plain">
-            <h3>Our Mission</h3>
-            <p>To make jewellery shopping simple, safe and joyful — offering quality pieces at fair prices with friendly, personal service from first order to final delivery.</p>
+            <h3>Read our Google Reviews</h3>
+            <p>See what our happy customers are saying about us on Google. We take pride in delivering quality and joy to every customer.</p>
           </article>
-          <article className="about-card about-card--plain">
-            <h3>Our Vision</h3>
-            <p>To be the most trusted name in elegant jewellery for women — known for honest advice, dependable quality and styles that make every occasion memorable.</p>
-          </article>
+
+          {/* Right Side: Clickable Profile Card */}
+          <a 
+            href="https://share.google/8ayLfG7zRCoufnejc" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="about-card about-card--google"
+          >
+            <h3>Visit our Profile</h3>
+            <p>Check out our full business profile, opening hours, and location details on Google Maps.</p>
+            <span className="about-google-link">
+              View on Google <ArrowRightIcon size={16} />
+            </span>
+          </a>
+
         </div>
       </section>
 
