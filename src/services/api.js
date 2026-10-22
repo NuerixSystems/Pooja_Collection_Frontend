@@ -2,10 +2,7 @@
 //
 // VITE_CRM_API_URL should include the full base path of the Pooja API, e.g.:
 //   Local:      http://localhost:8000/api/pooja
-//   Production: https://nuerix-crm.onrender.com/api/pooja
-//
-// `path` passed to api() must NOT start with `/api`. It is appended directly
-// to VITE_CRM_API_URL, e.g. api('/catalog') => <base>/catalog.
+//   Production: https://crm-dkc2.onrender.com/api/pooja
 
 import { CRM } from '../config';
 import { getToken } from './session';

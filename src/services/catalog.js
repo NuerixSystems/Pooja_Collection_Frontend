@@ -67,7 +67,8 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(new URL('/api/pooja/catalog', CRM.apiUrl).toString(), { signal: controller.signal });
+    // 👇 FIXED: CRM.apiUrl already has /api/pooja, so append /catalog directly
+    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/catalog`, { signal: controller.signal });
     if (!res.ok) return false;
     const data = await res.json();
     if (!Array.isArray(data?.products) || !Array.isArray(data?.categories)) return false;
@@ -140,17 +141,6 @@ export function getProducts({ categorySlug, categorySlugs, query, collection, so
 
 /**
  * Live search suggestions with relevance ranking.
- *
- * Score:
- *   1000 — exact product name match
- *    500 — product name starts with the query
- *    300 — product name contains the query
- *    200 — category name starts with the query
- *    150 — category name contains the query
- *    100 — product tag matches
- *     50 — product description contains the query
- *
- * Ties broken by shorter product names first.
  */
 export function searchSuggestions(query, limit = 8) {
   const q = (query || '').trim().toLowerCase();
