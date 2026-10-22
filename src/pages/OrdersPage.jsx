@@ -112,7 +112,11 @@ export default function OrdersPage() {
               <div className="order-card-foot">
                 <div className="order-meta">
                   <span className="muted">Payment</span>
-                  <strong>{order.payment_method === 'UPI' ? 'UPI / QR' : 'Cash on Delivery'}</strong>
+                  
+                  {/* --- CASH ON DELIVERY COMMENTED OUT START --- */}
+                  {/* <strong>{order.payment_method === 'UPI' ? 'UPI / QR' : 'Cash on Delivery'}</strong> */}
+                  {/* --- CASH ON DELIVERY COMMENTED OUT END --- */}
+
                   {order.utr_id && <small className="muted">UTR: {order.utr_id}</small>}
                 </div>
                 <div className="order-total">

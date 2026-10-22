@@ -111,12 +111,6 @@ function ContactChannels() {
   );
 }
 
-/* =========================================================
-   COMMENTED OUT: Generic Enquiry Form
-   =========================================================
-function EnquiryForm() { ... } 
-========================================================= */
-
 /**
  * Product enquiry: shown when /contact?enquiry=<slug> is opened.
  */
@@ -325,7 +319,10 @@ export default function Contact() {
   const [searchParams] = useSearchParams();
   const [values, setValues] = useState({});
   const [message, setMessage] = useState('');
-  const [payment, setPayment] = useState('cod');
+  
+  // ⚠️ CHANGED HERE: Default payment is now 'upi' instead of 'cod'
+  const [payment, setPayment] = useState('upi');
+  
   const [utr, setUtr] = useState('');
   const [errors, setErrors] = useState({});
   const [focusRequest, setFocusRequest] = useState({ field: null, attempt: 0 });
@@ -467,6 +464,9 @@ export default function Contact() {
 
               <fieldset className="pay-methods">
                 <legend>Payment method</legend>
+                
+                {/* --- CASH ON DELIVERY COMMENTED OUT START --- */}
+                {/* 
                 <label className={`pay-option ${payment === 'cod' ? 'is-selected' : ''}`}>
                   <input
                     type="radio"
@@ -480,6 +480,9 @@ export default function Contact() {
                     <small>Pay in cash when your order is delivered.</small>
                   </span>
                 </label>
+                */}
+                {/* --- CASH ON DELIVERY COMMENTED OUT END --- */}
+
                 <label className={`pay-option ${payment === 'upi' ? 'is-selected' : ''}`}>
                   <input
                     type="radio"
@@ -498,8 +501,7 @@ export default function Contact() {
                   <div className="upi-box">
                     {qrFailed ? (
                       <p className="upi-missing">
-                        QR code isn’t available right now. Please choose Cash on Delivery or message us
-                        on WhatsApp.
+                        QR code isn’t available right now. Please message us on WhatsApp.
                       </p>
                     ) : (
                       <img
