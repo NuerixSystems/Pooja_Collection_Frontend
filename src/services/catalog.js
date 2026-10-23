@@ -67,8 +67,11 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    // 👇 FIXED: CRM.apiUrl already has /api/pooja, so append /catalog directly
-    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/catalog`, { signal: controller.signal });
+    // 👇 FIXED: Smart URL for Local and Production
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const apiUrl = isLocal ? 'http://localhost:8000/api/pooja' : 'https://crm-dkc2.onrender.com/api/pooja';
+
+    const res = await fetch(`${apiUrl}/catalog`, { signal: controller.signal });
     if (!res.ok) return false;
     const data = await res.json();
     if (!Array.isArray(data?.products) || !Array.isArray(data?.categories)) return false;
