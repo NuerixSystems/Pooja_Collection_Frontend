@@ -25,9 +25,9 @@ export const UPI = {
 
 export const CRM = {
   tenantId: import.meta.env.VITE_TENANT_ID || '8',
-  apiUrl: import.meta.env.VITE_CRM_API_URL || '',
-  mediaUrl: import.meta.env.VITE_MEDIA_BASE || '',   // ← NEW
-  // ... existing fields
+  // 👇 Hardcode remove panni, .env file la irundhu load pandrom
+  apiUrl: import.meta.env.VITE_CRM_API_URL || 'http://localhost:8000/api/pooja',
+  mediaUrl: import.meta.env.VITE_MEDIA_BASE || 'http://localhost:8000',
 };
 
 // Categories that must never appear anywhere in the storefront,

@@ -40,3 +40,28 @@
   .product-page-media { max-width: 360px; }
   .product-page-actions { flex-direction: column; }
 }
+
+
+.delivery-box {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 14px;
+}
+.delivery-label {
+  color: #6b7280;
+}
+.delivery-address {
+  font-weight: 600;
+  color: #111827;
+}
+.delivery-change {
+  color: #2563eb;
+  text-decoration: underline;
+  font-size: 14px;
+}
+.delivery-text {
+  color: #4b5563;
+}

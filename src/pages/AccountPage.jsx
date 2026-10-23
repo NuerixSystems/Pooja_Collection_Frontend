@@ -70,6 +70,13 @@ export default function AccountPage() {
           <span className="account-chevron" aria-hidden>›</span>
         </Link>
 
+        {/* 👇 NEW: Manage Addresses Link Add Panniruken */}
+        <Link to="/account/addresses" className="account-link">
+          <span className="account-icon" aria-hidden>📍</span>
+          <span className="account-link-text">Manage Addresses</span>
+          <span className="account-chevron" aria-hidden>›</span>
+        </Link>
+
         <Link to="/account/edit" className="account-link">
           <span className="account-icon" aria-hidden>✏️</span>
           <span className="account-link-text">Edit Profile</span>

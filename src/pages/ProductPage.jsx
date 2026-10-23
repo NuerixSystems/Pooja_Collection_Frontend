@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import RecommendedProducts from '../components/RecommendedProducts';
 import ReviewsSection from '../components/ReviewsSection';
@@ -8,6 +8,8 @@ import { useStore } from '../context/StoreContext';
 import { useAddToCart } from '../hooks/useAddToCart';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { getCategory, getOtherProducts, getProductBySlug } from '../services/catalog';
+import { getDefaultAddress } from '../services/address';
+import { getSession } from '../services/auth';
 import { formatPrice } from '../utils/format';
 import NotFound from './NotFound';
 import './ProductPage.css';
@@ -18,6 +20,18 @@ function ProductDetails({ product }) {
   const [designId, setDesignId] = useState(null);
   const [designError, setDesignError] = useState(false);
   const pickerRef = useRef(null);
+
+  // Address feature
+  const [defaultAddress, setDefaultAddress] = useState(null);
+  const session = getSession();
+
+  useEffect(() => {
+    if (session) {
+      getDefaultAddress()
+        .then((data) => setDefaultAddress(data))
+        .catch(() => setDefaultAddress(null));
+    }
+  }, [session]);
 
   const category = getCategory(product.categorySlug);
   const needsDesign = product.designs.length > 0;
@@ -56,6 +70,34 @@ function ProductDetails({ product }) {
               {formatPrice(product.price)}
               {product.compareAtPrice && <s>{formatPrice(product.compareAtPrice)}</s>}
             </p>
+
+            {/* Deliver to Box */}
+            <div className="delivery-box">
+              {session ? (
+                defaultAddress ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="delivery-label">Deliver to:</span>{' '}
+                      <span className="delivery-address">
+                        {defaultAddress.name}, {defaultAddress.pincode}
+                      </span>
+                    </div>
+                    <Link to="/account/addresses" className="delivery-change">Change</Link>
+                  </div>
+                ) : (
+                  <p className="delivery-text">
+                    No address saved.{' '}
+                    <Link to="/account/addresses" className="delivery-change">Add address</Link>
+                  </p>
+                )
+              ) : (
+                <p className="delivery-text">
+                  <Link to="/login" className="delivery-change">Login</Link>{' '}
+                  to see delivery options
+                </p>
+              )}
+            </div>
+
             {product.description && <p className="product-page-desc">{product.description}</p>}
 
             {needsDesign && (
