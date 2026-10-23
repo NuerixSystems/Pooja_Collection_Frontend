@@ -25,7 +25,7 @@ import EditProfilePage from './pages/EditProfilePage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import OrdersPage from './pages/OrdersPage';
 import EnquiryPage from './pages/EnquiryPage';
-import AddressBook from './pages/AddressBook'; // 👈 Import correct ah irukku
+import AddressBook from './pages/AddressBook'; //  Import correct ah irukku
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useUI } from './context/UIContext';
 
@@ -80,7 +80,7 @@ export default function App() {
             <Route path="/account/edit" element={<EditProfilePage />} />
             <Route path="/account/password" element={<ChangePasswordPage />} />
             
-            {/* 👇 Address Book Route Correct ah Maathiruken */}
+            {/*  Address Book Route Correct ah Maathiruken */}
             <Route path="/account/addresses" element={<AddressBook />} />
 
             {/* Orders + Enquiries */}
