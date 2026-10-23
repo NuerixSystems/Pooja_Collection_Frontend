@@ -26,9 +26,9 @@ export const UPI = {
 export const CRM = {
 
   tenantId: import.meta.env.VITE_TENANT_ID || '8',
-  //  Hardcode remove panni, .env file la irundhu load pandrom
-  apiUrl: import.meta.env.VITE_CRM_API_URL || 'http://localhost:8000/api/pooja',
-  mediaUrl: import.meta.env.VITE_MEDIA_BASE || 'http://localhost:8000',
+ // 👇 Default-ah Production URL podu (Hardcode illa, fallback)
+  apiUrl: import.meta.env.VITE_CRM_API_URL || 'https://crm-dkc2.onrender.com/api/pooja',
+  mediaUrl: import.meta.env.VITE_MEDIA_BASE || 'https://crm-dkc2.onrender.com',
 
 };
 
