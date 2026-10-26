@@ -5,7 +5,7 @@ export default function ProductGrid({ products, empty, variant }) {
   if (!products.length) return empty || null;
   return (
     <div className={`product-grid${variant ? ` product-grid--${variant}` : ''}`}>
-      {products.map((p) => <ProductCard key={p.id} product={p} />)}
+      {products.map((p) => <ProductCard key={p.id} product={p} compact={variant === 'home'} />)}
     </div>
   );
 }

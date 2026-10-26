@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BRAND, NAV_LINKS } from '../config';
 import { useStore } from '../context/StoreContext';
@@ -43,7 +44,6 @@ function IconButton({ label, onClick, count, className = '', children }) {
   );
 }
 
-// Same look as IconButton, but navigates to a page rather than opening a panel.
 function IconLink({ label, to, count, active, className = '', children }) {
   return (
     <Link
@@ -67,87 +67,108 @@ export default function Header() {
   const { open } = useUI();
   const { cartCount, wishlistCount } = useStore();
   const loggedIn = useIsLoggedIn();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Logged in  -> a real link to /account.
-  // Guest      -> opens the login panel.
   const handleAccount = () => {
     if (loggedIn) navigate('/account');
     else open('login');
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      open('search');
+    }
+  };
+
   return (
     <header className="site-header">
-      <div className="header-shell">
-        {/* Back arrow — hidden on the home page (see BackButton). */}
-        <BackButton />
-
-        <IconButton
-          label="Open menu"
-          onClick={() => open('menu')}
-          className="menu-btn"
-        >
-          <MenuIcon />
-        </IconButton>
-
-        <Link to="/" className="brand" aria-label={`${BRAND.name} — home`}>
-          <img
-            src="/logo.png"
-            alt={BRAND.name}
-            className="brand-logo"
-            width="270"
-            height="100"
-          />
-        </Link>
-
-        <nav className="primary-nav" aria-label="Primary">
-          <ul>
-            {NAV_LINKS.map((link) => {
-              const active = isNavActive(link, location);
-              return (
-                <li key={link.key}>
-                  <Link
-                    to={link.to}
-                    className={active ? 'is-active' : ''}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        <div className="header-actions">
-          <IconButton label="Search" onClick={() => open('search')}>
-            <SearchIcon size={26} />
-          </IconButton>
+      {/* Top Bar: Logo, Search, Icons */}
+      <div className="header-top">
+        <div className="header-shell">
+          <BackButton />
 
           <IconButton
-            label={loggedIn ? 'My Account' : 'Log in'}
-            onClick={handleAccount}
-            className="hide-mobile"
+            label="Open menu"
+            onClick={() => open('menu')}
+            className="menu-btn"
           >
-            <UserIcon size={26} />
+            <MenuIcon />
           </IconButton>
 
-          <IconLink
-            label="Wishlist"
-            to="/wishlist"
-            count={wishlistCount}
-            active={location.pathname === '/wishlist'}
-            className="wishlist-link"
-          >
-            <HeartIcon size={26} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
-          </IconLink>
+          <Link to="/" className="brand" aria-label={`${BRAND.name} — home`}>
+            <img
+              src="/logo.png"
+              alt={BRAND.name}
+              className="brand-logo"
+              width="270"
+              height="100"
+            />
+            <span className="brand-name">Pooja's Collection</span>
+          </Link>
 
-          <IconButton
-            label="Cart"
-            onClick={() => open('cart')}
-            count={cartCount}
-          >
-            <CartIcon size={26} />
-          </IconButton>
+          {/* New Amazon-style Search Bar */}
+          <form className="header-search" onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Search Pooja's Collection..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search products"
+            />
+            <button type="submit" aria-label="Search">
+              <SearchIcon size={20} />
+            </button>
+          </form>
+
+          <nav className="primary-nav" aria-label="Primary">
+            <ul>
+              {NAV_LINKS.map((link) => {
+                const active = isNavActive(link, location);
+                return (
+                  <li key={link.key}>
+                    <Link
+                      to={link.to}
+                      className={active ? 'is-active' : ''}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="header-actions">
+            <IconButton
+              label={loggedIn ? 'My Account' : 'Log in'}
+              onClick={handleAccount}
+              className="hide-mobile"
+            >
+              <UserIcon size={26} />
+            </IconButton>
+
+            <IconLink
+              label="Wishlist"
+              to="/wishlist"
+              count={wishlistCount}
+              active={location.pathname === '/wishlist'}
+              className="wishlist-link"
+            >
+              <HeartIcon size={26} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
+            </IconLink>
+
+            <IconButton
+              label="Cart"
+              onClick={() => open('cart')}
+              count={cartCount}
+            >
+              <CartIcon size={26} />
+            </IconButton>
+          </div>
         </div>
       </div>
     </header>

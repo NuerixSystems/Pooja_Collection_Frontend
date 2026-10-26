@@ -1,27 +1,61 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import CategoryGrid from '../components/CategoryGrid';
 import ProductGrid from '../components/ProductGrid';
 import { OurStory, WhyChooseUs } from '../components/HomeSections';
-import { getTrendingProducts } from '../services/catalog';
+import { ChevronRightIcon } from '../components/Icons';
+import { getProducts } from '../services/catalog';
+import './Home.css';
 
-// No hero banner: categories are the first thing on the page.
 export default function Home() {
+  const productsRef = useRef(null);
+  const products = getProducts();
+
+  const scrollProducts = (direction) => {
+    if (productsRef.current) {
+      productsRef.current.scrollBy({
+        left: direction * productsRef.current.clientWidth * 0.75,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
     <div className="container container--full">
-      <section id="categories" className="section section--categories" aria-labelledby="cat-title">
-        <div className="section-head">
-          <h1 id="cat-title" className="section-title">Shop by category</h1>
-          <p className="section-sub">Find your favourite pieces</p>
-        </div>
+      <section id="categories" className="section section--categories home-categories" aria-labelledby="cat-title">
+        <h1 id="cat-title" className="visually-hidden">Shop by category</h1>
         <CategoryGrid />
       </section>
 
-      <section className="section section--trending" aria-labelledby="trend-title">
-        <div className="section-head">
-          <h2 id="trend-title" className="section-title">Trending now</h2>
-          <Link to="/shop" className="text-link">View all</Link>
+      <div className="home-divider" aria-hidden="true">
+        <span className="home-divider-line" />
+        <svg className="home-lotus" viewBox="0 0 32 24" fill="none">
+          <path d="M16 21C9 21 5 17 5 12c4 0 7 2 9 6-1-6 0-10 2-14 2 4 3 8 2 14 2-4 5-6 9-6 0 5-4 9-11 9Z" />
+          <path d="M3 18c4 0 7 1 10 3m16-3c-4 0-7 1-10 3" />
+        </svg>
+        <span className="home-divider-line" />
+      </div>
+
+      <section className="section section--trending home-trending" aria-labelledby="trend-title">
+        <div className="home-trending-head">
+          <div>
+            <h2 id="trend-title" className="section-title">Trending now</h2>
+            <p className="section-sub">Our most loved products, handpicked for you</p>
+          </div>
+          <Link to="/shop" className="text-link">View all <ChevronRightIcon size={18} /></Link>
         </div>
-        <ProductGrid products={getTrendingProducts(8, 1)} />
+
+        <div className="home-product-carousel">
+          <button type="button" className="home-carousel-arrow" aria-label="Previous products" onClick={() => scrollProducts(-1)}>
+            <ChevronRightIcon size={20} className="is-reversed" />
+          </button>
+          <div className="home-product-window" ref={productsRef}>
+            <ProductGrid products={products} variant="home" />
+          </div>
+          <button type="button" className="home-carousel-arrow" aria-label="Next products" onClick={() => scrollProducts(1)}>
+            <ChevronRightIcon size={20} />
+          </button>
+        </div>
       </section>
 
       <OurStory />
