@@ -1,0 +1,135 @@
+.home-categories {
+  position: relative;
+  padding: 42px 0 30px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 0 0, rgba(213, 172, 92, .08), transparent 24%),
+    radial-gradient(ellipse at 100% 0, rgba(213, 172, 92, .08), transparent 24%);
+}
+.home-categories::before,
+.home-categories::after {
+  position: absolute;
+  top: 6px;
+  width: 72px;
+  height: 86px;
+  content: '';
+  pointer-events: none;
+  opacity: .42;
+  background:
+    radial-gradient(ellipse at 0 20%, transparent 45%, #dfbd79 47% 49%, transparent 51%),
+    radial-gradient(ellipse at 25% 40%, transparent 45%, #dfbd79 47% 49%, transparent 51%),
+    radial-gradient(ellipse at 8% 68%, transparent 45%, #dfbd79 47% 49%, transparent 51%);
+}
+.home-categories::before { left: -28px; transform: rotate(18deg); }
+.home-categories::after { right: -28px; transform: scaleX(-1) rotate(18deg); }
+.category-carousel,
+.home-product-carousel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.category-carousel { position: relative; }
+.home-carousel-arrow {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(190, 154, 97, .16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .94);
+  color: #c2831e;
+  box-shadow: 0 2px 8px rgba(70, 44, 20, .1);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.home-carousel-arrow:hover {
+  transform: translateY(-1px);
+  background: #fffaf0;
+  box-shadow: 0 4px 12px rgba(70, 44, 20, .15);
+}
+.is-reversed { transform: rotate(180deg); }
+.category-marquee {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 0 4px;
+}
+.category-track { align-items: flex-start; }
+
+.home-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  color: #ce963a;
+}
+.home-divider-line { height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #d9ad61); }
+.home-divider-line:last-child { background: linear-gradient(90deg, #d9ad61, transparent); }
+.home-lotus { width: 28px; height: 22px; stroke: currentColor; stroke-width: 1.15; }
+
+.home-trending {
+  padding: 22px 20px 52px;
+  background:
+    radial-gradient(ellipse at 0 10%, rgba(213, 172, 92, .06), transparent 18%),
+    radial-gradient(ellipse at 100% 100%, rgba(213, 172, 92, .07), transparent 18%);
+}
+.home-trending-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.home-trending .section-title { color: #692943; font-size: clamp(2rem, 3vw, 2.55rem); }
+.home-trending .section-sub { margin-top: 1px; color: #727272; font-size: .98rem; }
+.home-trending .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #bd7d18;
+  white-space: nowrap;
+}
+.home-product-carousel { gap: 12px; }
+.home-product-window {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 0 8px;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.home-product-window::-webkit-scrollbar { display: none; }
+.home-product-window .product-grid { min-width: 0; }
+
+@media (max-width: 760px) {
+  .home-categories { padding: 26px 0 22px; }
+  .category-carousel,
+  .home-product-carousel { gap: 5px; }
+  .home-carousel-arrow { flex-basis: 34px; width: 34px; height: 34px; }
+  .home-divider { padding: 0 4px; }
+  .home-trending { padding: 20px 12px 36px; }
+  .home-trending-head { margin-bottom: 14px; }
+  .home-trending .section-title { font-size: 2rem; }
+  .home-trending .section-sub { font-size: .88rem; }
+  .home-product-carousel {
+    position: relative;
+    display: block;
+  }
+  .home-product-window {
+    width: 100%;
+    padding: 2px 0 10px;
+  }
+  .home-product-carousel > .home-carousel-arrow {
+    position: absolute;
+    top: 42%;
+    transform: translateY(-50%);
+  }
+  .home-product-carousel > .home-carousel-arrow:first-child { left: -8px; }
+  .home-product-carousel > .home-carousel-arrow:last-child { right: -8px; }
+}
+@media (max-width: 480px) {
+  .home-trending-head { align-items: flex-start; }
+  .home-trending .text-link { font-size: .88rem; }
+  .home-carousel-arrow { flex-basis: 30px; width: 30px; height: 30px; }
+}

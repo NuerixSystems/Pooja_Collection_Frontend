@@ -78,6 +78,45 @@
   outline-offset: 1px;
 }
 
+/* --- Password Input with Toggle --- */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 44px; /* Make room for the eye icon */
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted, #9a7d5f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+  color: var(--burgundy);
+}
+
+.password-toggle:focus {
+  outline: none;
+  color: var(--burgundy);
+}
+/* ---------------------------------- */
+
 /* The submit button — force block + full width, unlike global .btn. */
 .auth-form .btn,
 .auth-form button[type='submit'] {

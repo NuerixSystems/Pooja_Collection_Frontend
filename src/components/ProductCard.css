@@ -57,7 +57,7 @@
 @media (max-width: 700px) { .product-grid--shop { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Nine trending items: a lone last card is centred on the 2-column mobile layout (not used for filtered Shop results). */
-@media (max-width: 700px) { .product-grid:not(.product-grid--shop) > .product-card:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 6px); } }
+@media (max-width: 700px) { .product-grid:not(.product-grid--shop):not(.product-grid--home) > .product-card:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 6px); } }
 
 /* Keep the five Home page trending cards compact without changing other product grids. */
 @media (min-width: 1001px) {
@@ -72,4 +72,59 @@
   .section--trending .product-price s { font-size: .8rem; }
   .section--trending .product-add { min-height: 40px; padding: 8px 10px; font-size: .9rem; }
   .section--trending .product-badge { top: 8px; left: 8px; padding: 3px 8px; font-size: .7rem; }
+}
+
+.product-grid--home {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 70px) / 8);
+  grid-template-columns: none;
+  gap: 10px;
+}
+.product-card--compact { background: #fdfbf7; }
+.product-card--compact .product-media {
+  aspect-ratio: 1;
+  margin: 10px 10px 0;
+  border: 0;
+  border-radius: 10px;
+  background: #f7f2e9;
+}
+.product-card--compact .product-img { object-fit: contain; }
+.product-card--compact .product-info { gap: 4px; padding: 9px 12px 12px; }
+.product-card--compact .product-name {
+  font-family: var(--font-ui);
+  font-size: .86rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.product-card--compact .product-foot { padding-top: 2px; }
+.product-card--compact .product-price { color: #b8791f; font-size: .94rem; }
+.product-card--compact .wish-btn {
+  top: 7px;
+  right: 7px;
+  width: 32px;
+  height: 32px;
+  background: rgba(253, 251, 247, .92);
+}
+
+@media (min-width: 701px) {
+  .home-trending .product-grid--home {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 70px) / 8);
+  }
+
+  .home-trending .product-card--compact .product-media {
+    flex: 0 0 auto;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (max-width: 1080px) {
+  .home-trending .product-grid--home { grid-auto-columns: 148px; }
+}
+@media (max-width: 700px) {
+  .product-grid--home { grid-auto-columns: minmax(42vw, 1fr); gap: 12px; }
+  .product-card--compact .product-info { padding: 9px 10px 11px; }
 }

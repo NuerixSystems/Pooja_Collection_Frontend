@@ -1,24 +1,85 @@
-.site-header { position: sticky; top: 0; z-index: 50; padding: 10px 24px 0; background: var(--page); }
-.header-shell {
-  display: flex; align-items: center; gap: 28px; width: 100%; margin: 0 auto;
-  background: #faf6eb; border-radius: 8px; padding: 6px 36px;
+.site-header { 
+  position: sticky; 
+  top: 0; 
+  z-index: 50; 
+  background: #faf6eb; 
   box-shadow: 0 4px 18px rgba(120, 80, 20, .08);
+  display: flex;
+  flex-direction: column;
 }
 
-.brand { display: block; flex: none; }
-.brand-logo { height: 64px; width: auto; }
-
-/* divider lines either side of the nav, as in the design reference */
-.primary-nav {
-  flex: 1; display: flex; justify-content: center; align-self: stretch; align-items: center;
-  margin: 8px 0; padding: 0 28px; border-left: 1px solid rgba(184, 147, 90, .55); border-right: 1px solid rgba(184, 147, 90, .55);
+.header-top {
+  border-bottom: 1px solid rgba(184, 147, 90, .3);
+  padding: 8px 24px;
 }
-.primary-nav ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 44px; margin: 0; padding: 0; list-style: none; }
-.primary-nav a { display: block; padding: 6px 2px; font-size: 1.1rem; color: #6b2f12; border-bottom: 2.5px solid transparent; transition: color .15s, border-color .15s; }
-.primary-nav a:hover { color: #b8791f; }
-.primary-nav a.is-active { color: #c2831e; font-weight: 500; border-bottom-color: #c2831e; }
 
-.header-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.header-shell {
+  display: flex; 
+  align-items: center; 
+  gap: 24px; 
+  width: 100%; 
+  margin: 0 auto;
+  max-width: 1400px;
+}
+
+/* Brand Section */
+.brand { display: flex; align-items: center; gap: 12px; flex: none; text-decoration: none; }
+.brand-logo { height: 56px; width: auto; object-fit: contain; }
+.brand-name {
+  font-family: var(--font-display, 'Playfair Display', serif);
+  font-size: 1.5rem;
+  color: #6b2f12;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Amazon-style Search Bar */
+.header-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  max-width: 700px;
+  background: #fff;
+  border: 2px solid #c2831e; /* Gold border */
+  border-radius: 8px;
+  overflow: hidden;
+  height: 44px;
+}
+
+.header-search input {
+  flex: 1;
+  border: none;
+  padding: 0 16px;
+  font-size: 1rem;
+  color: #6b2f12;
+  background: transparent;
+  outline: none;
+}
+
+.header-search input::placeholder {
+  color: #9a7d5f;
+}
+
+.header-search button {
+  background: #c2831e; /* Gold button */
+  border: none;
+  height: 100%;
+  padding: 0 20px;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.header-search button:hover {
+  background: #a86f15; /* Darker gold on hover */
+}
+
+/* Actions Section */
+.header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .icon-btn {
   position: relative; display: grid; place-items: center; width: 44px; height: 44px;
   border: 0; background: transparent; border-radius: 50%; color: #6b2f12; transition: background .15s;
@@ -33,24 +94,182 @@ a.icon-btn { text-decoration: none; }
 .icon-btn[aria-current="page"] { background: rgba(184, 147, 90, .18); }
 .menu-btn { display: none; }
 
-@media (max-width: 900px) {
-  .header-shell { gap: 16px; padding: 6px 20px; }
-  .primary-nav { padding: 0 16px; }
-  .primary-nav ul { gap: 4px 24px; }
-}
-@media (max-width: 760px) {
-  .site-header { padding: 6px 8px 0; }
-  .header-shell { gap: 4px; padding: 4px 8px; justify-content: space-between; }
-  .brand { margin: 0 auto 0 0; }
-  .brand-logo { height: 46px; }
-  .header-actions { gap: 0; }
-  .icon-btn { width: 44px; height: 44px; }
-  .menu-btn { display: grid; order: -1; }
-  .hide-mobile, .primary-nav { display: none; }
+/* Navigation Bar (Below Search) */
+.primary-nav {
+  display: flex; 
+  justify-content: center; 
+  padding: 0 24px;
+  background: #faf6eb;
 }
 
-/* very small phones (≈320px): menu + logo + search + heart + cart must still fit on one row */
-@media (max-width: 380px) {
+.primary-nav ul { 
+  display: flex; 
+  flex-wrap: wrap; 
+  justify-content: center; 
+  gap: 4px 44px; 
+  margin: 0; 
+  padding: 0; 
+  list-style: none; 
+}
+
+.primary-nav a { 
+  display: block; 
+  padding: 12px 2px; 
+  font-size: 1.05rem; 
+  color: #6b2f12; 
+  border-bottom: 2.5px solid transparent; 
+  transition: color .15s, border-color .15s; 
+  font-weight: 500;
+}
+
+.primary-nav a:hover { color: #b8791f; }
+.primary-nav a.is-active { color: #c2831e; font-weight: 600; border-bottom-color: #c2831e; }
+
+
+/* --- Responsive Design --- */
+
+@media (max-width: 1024px) {
+  .brand-name { font-size: 1.3rem; }
+  .primary-nav ul { gap: 4px 24px; }
+}
+
+@media (max-width: 860px) {
+  .header-shell { gap: 12px; }
+  .brand-logo { height: 46px; }
+  .brand-name { font-size: 1.1rem; }
+  .header-search { height: 40px; }
+  .header-search input { font-size: 0.95rem; }
+}
+
+@media (max-width: 760px) {
+  .header-top { padding: 8px 12px; }
+  .header-shell { flex-wrap: wrap; gap: 8px; }
+  
+  /* Reorder for mobile: Menu -> Logo -> Icons -> Search */
+  .menu-btn { display: grid; order: -2; }
+  .brand { order: -1; margin-right: auto; gap: 8px; }
+  .header-actions { order: 0; }
+  
+  .brand-name { 
+    display: block; /* Ensure it's visible on mobile now */
+    font-size: 1.2rem; 
+  }
+  
+  .hide-mobile { display: none !important; }
+
+  /* Make search bar take full width below the top row on mobile */
+  .header-search {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 4px;
+    flex-basis: 100%;
+  }
+
+  /* Navigation adjusts */
+  .primary-nav { padding: 0 12px; }
+  .primary-nav ul { gap: 0 16px; }
+  .primary-nav a { padding: 10px 2px; font-size: 0.95rem; }
+}
+
+@media (max-width: 480px) {
   .brand-logo { height: 38px; }
-  .icon-btn { width: 40px; height: 40px; }
+  .brand-name { font-size: 1rem; }
+  .icon-btn { width: 38px; height: 38px; }
+  .primary-nav ul { 
+    justify-content: flex-start; 
+    overflow-x: auto; 
+    white-space: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Single-row desktop masthead, matching the storefront's reference layout. */
+.site-header { background: #fbf8f1; }
+.header-top { padding: 8px 24px; }
+.header-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto auto;
+  align-items: center;
+  gap: clamp(10px, 1.35vw, 20px);
+  max-width: 1440px;
+}
+.brand { gap: 12px; }
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(194, 131, 30, .28);
+  border-radius: 50%;
+  object-fit: cover;
+}
+.brand-name { font-size: clamp(1.15rem, 1.5vw, 1.45rem); }
+.header-search {
+  width: 100%;
+  max-width: none;
+  height: 44px;
+  border: 1px solid #c2831e;
+  border-radius: 8px;
+}
+.primary-nav {
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+}
+.primary-nav ul { flex-wrap: nowrap; gap: 0 clamp(12px, 1.5vw, 24px); }
+.primary-nav a { padding: 10px 1px; font-size: .94rem; white-space: nowrap; }
+.header-actions { gap: 4px; }
+.icon-btn { width: 40px; height: 42px; }
+.badge { top: 0; right: -1px; }
+.back-btn { position: absolute; left: -14px; transform: translateX(-100%); }
+
+@media (max-width: 1080px) {
+  .header-top { padding-inline: 18px; }
+  .header-shell { grid-template-columns: auto minmax(150px, 1fr) auto; }
+  .primary-nav { grid-column: 1 / -1; grid-row: 2; }
+  .primary-nav ul { gap: 0 28px; }
+  .header-actions { grid-column: 3; grid-row: 1; }
+}
+
+@media (max-width: 760px) {
+  .header-top { padding: 8px 12px; }
+  .header-shell { display: flex; flex-wrap: wrap; gap: 8px; }
+  .back-btn { position: static; order: -3; transform: none; }
+  .menu-btn { display: grid; order: -2; }
+  .brand { order: -1; margin-right: auto; gap: 8px; }
+  .brand-logo { width: 44px; height: 44px; }
+  .brand-name { display: block; font-size: 1.08rem; }
+  .header-actions { order: 0; }
+  .hide-mobile { display: none !important; }
+  .header-search {
+    order: 1;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 2px;
+  }
+  .primary-nav {
+    order: 2;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    padding: 0;
+  }
+  .primary-nav ul {
+    justify-content: flex-start;
+    gap: 0 20px;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .primary-nav a { padding: 8px 1px; font-size: .9rem; }
+}
+
+@media (max-width: 480px) {
+  .brand-logo { width: 38px; height: 38px; }
+  .brand-name { font-size: .98rem; }
+  .icon-btn { width: 36px; height: 38px; }
+  .primary-nav ul { padding-bottom: 2px; }
 }

@@ -71,6 +71,25 @@ function InstagramIcon({ size = 28 }) {
   );
 }
 
+// --- Added Eye Icons for Password Toggle ---
+function EyeIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 // --- Contact Channels (Solid Green Box) -------------------------------------
 function ContactChannels() {
   return (
@@ -329,6 +348,10 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
+  
+  // Added state for password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+  
   const inputs = useRef({});
   const requestId = useRef(newRequestId());
   useDocumentTitle('Contact');
@@ -429,20 +452,47 @@ export default function Contact() {
                 {CHECKOUT_FIELDS.map((f) => (
                   <div key={f.name} className={`field ${f.wide ? 'field--wide' : ''}`}>
                     <label htmlFor={`f-${f.name}`}>{f.label}</label>
-                    <input
-                      ref={(el) => {
-                        inputs.current[f.name] = el;
-                      }}
-                      id={`f-${f.name}`}
-                      name={f.name}
-                      type={f.type || 'text'}
-                      inputMode={f.inputMode}
-                      autoComplete={f.autoComplete}
-                      value={values[f.name] || ''}
-                      onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
-                      aria-invalid={errors[f.name] ? 'true' : undefined}
-                      aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
-                    />
+                    {f.type === 'password' ? (
+                      <div className="password-input-wrap">
+                        <input
+                          ref={(el) => {
+                            inputs.current[f.name] = el;
+                          }}
+                          id={`f-${f.name}`}
+                          name={f.name}
+                          type={showPassword ? 'text' : 'password'}
+                          inputMode={f.inputMode}
+                          autoComplete={f.autoComplete}
+                          value={values[f.name] || ''}
+                          onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
+                          aria-invalid={errors[f.name] ? 'true' : undefined}
+                          aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        ref={(el) => {
+                          inputs.current[f.name] = el;
+                        }}
+                        id={`f-${f.name}`}
+                        name={f.name}
+                        type={f.type || 'text'}
+                        inputMode={f.inputMode}
+                        autoComplete={f.autoComplete}
+                        value={values[f.name] || ''}
+                        onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
+                        aria-invalid={errors[f.name] ? 'true' : undefined}
+                        aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
+                      />
+                    )}
                     {errors[f.name] && (
                       <p className="field-error" id={`e-${f.name}`}>
                         {errors[f.name]}
