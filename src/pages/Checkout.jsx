@@ -19,8 +19,25 @@ const newRequestId = () =>
 export default function Checkout() {
   const { lines, cartTotal, cartCount, clearCart } = useStore();
   const navigate = useNavigate();
-  const { open } = useUI();
-  const [values, setValues] = useState({});
+  const { open, checkoutAddress } = useUI();
+
+  // 👇 DEBUG LOG to check if address is in context
+  console.log('🟢 Checkout Address in context:', checkoutAddress);
+
+  const [values, setValues] = useState(() => {
+    if (checkoutAddress) {
+      return {
+        name: checkoutAddress.name || '',
+        phone: checkoutAddress.phone || '',
+        pincode: checkoutAddress.pincode || '',
+        address: checkoutAddress.addressLine || '',
+        city: checkoutAddress.city || '',
+        state: checkoutAddress.state || '',
+      };
+    }
+    return {};
+  });
+
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState({});
   const [focusRequest, setFocusRequest] = useState({ field: null, attempt: 0 });

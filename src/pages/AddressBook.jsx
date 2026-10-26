@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAddresses, createAddress, deleteAddress, setDefaultAddress } from '../services/address';
+import { getSession } from '../services/auth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import './AddressBook.css';
 
@@ -8,13 +10,20 @@ export default function AddressBook() {
   const [addresses, setAddresses] = useState([]);
   const [form, setForm] = useState({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
   const [loading, setLoading] = useState(false);
+  
+  const session = getSession();
 
   const loadAddresses = () => {
-    getAddresses().then(setAddresses).catch(() => {});
+    if (session) {
+      getAddresses()
+        .then((data) => setAddresses(data))
+        .catch(() => setAddresses([]));
+    }
   };
 
   useEffect(() => {
     loadAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e) => {
@@ -33,19 +42,37 @@ export default function AddressBook() {
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this address?')) {
-      await deleteAddress(id);
-      loadAddresses();
+      try {
+        await deleteAddress(id);
+        loadAddresses();
+      } catch (err) {
+        alert('Failed to delete address');
+      }
     }
   };
 
   const handleSetDefault = async (id) => {
-    await setDefaultAddress(id);
-    loadAddresses();
+    try {
+      await setDefaultAddress(id);
+      loadAddresses();
+    } catch (err) {
+      alert('Failed to set default address');
+    }
   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  if (!session) {
+    return (
+      <div className="container address-book-page">
+        <h1 className="section-title mb-4">Manage Addresses</h1>
+        <p>Please log in to manage your addresses.</p>
+        <Link to="/login" className="btn">Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container address-book-page">

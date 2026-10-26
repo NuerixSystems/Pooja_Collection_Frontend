@@ -132,3 +132,21 @@
 .mt-4 {
   margin-top: 1rem;
 }
+
+@media (max-width: 600px) {
+  .address-form .field-grid {
+    grid-template-columns: 1fr;
+  }
+  .address-form .field--wide {
+    grid-column: span 1;
+  }
+  .address-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .address-actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

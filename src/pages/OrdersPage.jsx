@@ -90,7 +90,7 @@ export default function OrdersPage() {
               <div className="order-card-head">
                 <div>
                   <Link to={`/order/${order.id}`} className="order-number">{order.id}</Link>
-                  <p className="muted order-date">{formatDate(order.created_at)}</p>
+                  <p className="muted order-date">{formatDate(order.createdAt)}</p>
                 </div>
                 <span className={statusClass}>{statusLabel}</span>
               </div>
@@ -109,15 +109,18 @@ export default function OrdersPage() {
                 ))}
               </ul>
 
+              {/* 👇 Admin Notes Box (User-ku kaattum) */}
+              {order.adminNotes && (
+                <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm font-semibold text-yellow-800">Message from Shop:</p>
+                  <p className="text-sm text-yellow-700">{order.adminNotes}</p>
+                </div>
+              )}
+
               <div className="order-card-foot">
                 <div className="order-meta">
                   <span className="muted">Payment</span>
-                  
-                  {/* --- CASH ON DELIVERY COMMENTED OUT START --- */}
-                  {/* <strong>{order.payment_method === 'UPI' ? 'UPI / QR' : 'Cash on Delivery'}</strong> */}
-                  {/* --- CASH ON DELIVERY COMMENTED OUT END --- */}
-
-                  {order.utr_id && <small className="muted">UTR: {order.utr_id}</small>}
+                  {order.utrId && <small className="muted">UTR: {order.utrId}</small>}
                 </div>
                 <div className="order-total">
                   <span className="muted">Total</span>
