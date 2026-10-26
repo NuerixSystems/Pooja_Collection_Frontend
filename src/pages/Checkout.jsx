@@ -17,17 +17,31 @@ const newRequestId = () =>
 export default function Checkout() {
   const { lines, cartTotal, cartCount, clearCart } = useStore();
   const navigate = useNavigate();
-  const { open } = useUI();
-  const [values, setValues] = useState({});
+  const { open, checkoutAddress } = useUI();
+
+  // 👇 DEBUG LOG to check if address is in context
+  console.log('🟢 Checkout Address in context:', checkoutAddress);
+
+  const [values, setValues] = useState(() => {
+    if (checkoutAddress) {
+      return {
+        name: checkoutAddress.name || '',
+        phone: checkoutAddress.phone || '',
+        pincode: checkoutAddress.pincode || '',
+        address: checkoutAddress.addressLine || '',
+        city: checkoutAddress.city || '',
+        state: checkoutAddress.state || '',
+      };
+    }
+    return {};
+  });
+
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState({});
-  // Focus must move AFTER React has rendered the error state, so a failed submit records which
-  // field to focus (and a counter so repeated failures on the same field re-trigger the effect).
   const [focusRequest, setFocusRequest] = useState({ field: null, attempt: 0 });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const inputs = useRef({});
-  // One id per attempt: if a response is lost and the customer retries, the server returns the same order.
   const requestId = useRef(newRequestId());
   useDocumentTitle('Checkout');
 
@@ -67,7 +81,6 @@ export default function Checkout() {
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
       if (err instanceof ApiError && err.status === 401) open('login');
-      // The server definitively said no (not a dropped connection): the next attempt is a new request.
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) requestId.current = newRequestId();
       setSubmitting(false);
     }

@@ -1,0 +1,152 @@
+/* Address Book Page Styles */
+
+.address-book-page {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.address-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.address-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.address-card.is-default {
+  border-color: #8b5cf6; /* Purple border for default */
+  background-color: #f5f3ff;
+}
+
+.address-name {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: #111827;
+}
+
+.default-badge {
+  background-color: #8b5cf6;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.address-text {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+.address-phone {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.address-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn--danger {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+.btn--danger:hover {
+  background: #fee2e2;
+}
+
+.add-address-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background-color: #ffffff;
+}
+
+.section-title-sm {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.address-form .field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.address-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.address-form .field--wide {
+  grid-column: span 2;
+}
+
+.address-form label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.address-form .input {
+  padding: 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.address-form .input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .address-form .field-grid {
+    grid-template-columns: 1fr;
+  }
+  .address-form .field--wide {
+    grid-column: span 1;
+  }
+  .address-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .address-actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
