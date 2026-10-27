@@ -1,6 +1,6 @@
 // Catalogue access layer. Components only talk to this file.
 // There is no bundled catalogue: categories, products and image URLs all come from the backend
-// (GET /api/pooja/catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
+// (GET /catalog, backed by the database). main.jsx calls hydrateCatalog() before the first render and shows a
 // retry screen if the backend can't be reached.
 
 import { CRM, EXCLUDED_CATEGORY_SLUGS, HIDDEN_TAGS } from '../config';
@@ -13,10 +13,13 @@ const isAllowed = (slug) => !excluded.has(String(slug).toLowerCase());
 export const imageUrl = (path) => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
+  // `CRM.mediaUrl` points at the backend root (e.g. http://localhost:8000) since the API
+  // returns fully-qualified paths like /media/pooja/products/x.webp.
   return `${(CRM.mediaUrl || CRM.apiUrl).replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 // A product only has selectable designs when the data lists them explicitly as [{ id, label }].
+// Never derive designs from description text: availability per design is not known to the storefront.
 const cleanDesigns = (designs) => {
   if (!Array.isArray(designs)) return [];
   const seen = new Set();
@@ -28,7 +31,7 @@ const FEATURED_TAGS = ['Best Seller', 'Trending', 'Viral', 'Premium', 'New Arriv
 let products = [];
 let categories = [];
 
-/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /api/pooja/catalog). */
+/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /catalog). */
 export function setCatalog(data) {
   const nextProducts = data.products
     .filter((p) => isAllowed(p.categorySlug))
@@ -59,7 +62,8 @@ export function setCatalog(data) {
 }
 
 /**
- * Load the catalogue from the backend. Never throws; returns true when it loaded, false on any problem.
+ * Load the catalogue from the backend. Never throws; returns true when it loaded, false on any problem
+ * (no API configured, network error, timeout, malformed response). Nothing is cached in the browser.
  * @returns {Promise<boolean>}
  */
 export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
@@ -67,7 +71,7 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(new URL('/api/pooja/catalog', CRM.apiUrl).toString(), { signal: controller.signal });
+    const res = await fetch(`${CRM.apiUrl.replace(/\/+$/, '')}/catalog`, { signal: controller.signal });
     if (!res.ok) return false;
     const data = await res.json();
     if (!Array.isArray(data?.products) || !Array.isArray(data?.categories)) return false;
@@ -77,6 +81,24 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
     return false;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** Load the complete product gallery from the public Pooja API. */
+export async function getProductGallery(slug) {
+  if (!CRM.apiUrl || !slug) return [];
+  try {
+    const url = `${CRM.apiUrl.replace(/\/+$/, '')}/products/${encodeURIComponent(slug)}/gallery`;
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) return [];
+    const data = await response.json();
+    if (!Array.isArray(data?.images)) return [];
+    return data.images
+      .map((item) => imageUrl(item?.url))
+      .filter(Boolean)
+      .filter((url, index, all) => all.indexOf(url) === index);
+  } catch {
+    return [];
   }
 }
 
@@ -138,54 +160,11 @@ export function getProducts({ categorySlug, categorySlugs, query, collection, so
   return SORTERS[sort] ? [...list].sort(SORTERS[sort]) : list;
 }
 
-/**
- * Live search suggestions with relevance ranking.
- *
- * Score:
- *   1000 — exact product name match
- *    500 — product name starts with the query
- *    300 — product name contains the query
- *    200 — category name starts with the query
- *    150 — category name contains the query
- *    100 — product tag matches
- *     50 — product description contains the query
- *
- * Ties broken by shorter product names first.
- */
-export function searchSuggestions(query, limit = 8) {
-  const q = (query || '').trim().toLowerCase();
+export function searchSuggestions(query, limit = 5) {
+  const q = query.trim().toLowerCase();
   if (!q) return { categories: [], products: [] };
-
-  const catName = (slug) => getCategory(slug)?.name.toLowerCase() || '';
-
-  const scored = products
-    .map((p) => {
-      const name = (p.name || '').toLowerCase();
-      const desc = (p.description || '').toLowerCase();
-      const cat = catName(p.categorySlug);
-      const tag = (p.tag || '').toLowerCase();
-
-      let score = 0;
-      if (name === q) score = 1000;
-      else if (name.startsWith(q)) score = 500;
-      else if (name.includes(q)) score = 300;
-      else if (cat.startsWith(q)) score = 200;
-      else if (cat.includes(q)) score = 150;
-      else if (tag.includes(q)) score = 100;
-      else if (desc.includes(q)) score = 50;
-
-      return { product: p, score };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return (a.product.name || '').length - (b.product.name || '').length;
-    })
-    .slice(0, limit)
-    .map(({ product }) => product);
-
   return {
     categories: categories.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 3),
-    products: scored,
+    products: getProducts({ query: q }).slice(0, limit),
   };
 }
