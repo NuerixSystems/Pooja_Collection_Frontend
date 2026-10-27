@@ -86,22 +86,23 @@ export async function hydrateCatalog({ timeoutMs = 8000 } = {}) {
 
 /** Load the complete product gallery from the public Pooja API. */
 export async function getProductGallery(slug) {
-  if (!CRM.apiUrl || !slug) return [];
-  try {
-    const url = `${CRM.apiUrl.replace(/\/+$/, '')}/products/${encodeURIComponent(slug)}/gallery`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) return [];
-    const data = await response.json();
-    if (!Array.isArray(data?.images)) return [];
-    return data.images
-      .map((item) => imageUrl(item?.url))
-      .filter(Boolean)
-      .filter((url, index, all) => all.indexOf(url) === index);
-  } catch {
-    return [];
-  }
-}
+  const response = await fetch(
+    `${API_BASE_URL}/api/pooja/products/${encodeURIComponent(slug)}/gallery`
+  );
 
+  if (!response.ok) {
+    throw new Error(
+      `Gallery request failed: ${response.status} ${response.url}`
+    );
+  }
+
+  const data = await response.json();
+
+  // Support the ProductGalleryOut response structure.
+  return (data.images || [])
+    .map((image) => image.url)
+    .filter(Boolean);
+}
 export const getCategories = () => categories;
 export const getCategory = (slug) => categories.find((c) => c.slug === slug) || null;
 export const getProductById = (id) => products.find((p) => p.id === id) || null;
