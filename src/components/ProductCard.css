@@ -128,3 +128,18 @@
   .product-grid--home { grid-auto-columns: minmax(42vw, 1fr); gap: 12px; }
   .product-card--compact .product-info { padding: 9px 10px 11px; }
 }
+
+/* Product description preview: plain text only, never raw HTML markup */
+.product-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: calc(1.5em * 2);
+}
