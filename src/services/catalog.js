@@ -2,18 +2,12 @@
 import { CRM, EXCLUDED_CATEGORY_SLUGS, HIDDEN_TAGS } from '../config';
 
 const excluded = new Set(EXCLUDED_CATEGORY_SLUGS);
-<<<<<<< HEAD
-const hiddenTags = new Set(HIDDEN_TAGS.map((t) => t.toLowerCase()));
-const isAllowed = (slug) => !excluded.has(String(slug).toLowerCase());
+const hiddenTags = new Set(HIDDEN_TAGS.map((tag) => tag.toLowerCase()));
+const isAllowed = (slug) => !excluded.has(String(slug ?? '').toLowerCase());
 const mediaBaseUrl = (CRM.mediaUrl || CRM.apiUrl).replace(/\/api\/pooja\/?$/, '').replace(/\/+$/, '');
 const PRODUCT_IMAGE_OVERRIDES = {
   'anti-tarnish-watch': `${mediaBaseUrl}/media/pooja/products/watches.webp`,
 };
-=======
-const hiddenTags = new Set(HIDDEN_TAGS.map((tag) => tag.toLowerCase()));
->>>>>>> cfc24a8af18a584b196c9f0d12ca1e4f841dd028
-
-const isAllowed = (slug) => !excluded.has(String(slug ?? '').toLowerCase());
 
 const FEATURED_TAGS = [
   'Best Seller',
@@ -26,30 +20,16 @@ const FEATURED_TAGS = [
 let products = [];
 let categories = [];
 
-<<<<<<< HEAD
-/** Replace the in-memory catalogue with `data` ({ categories, products }, the shape of GET /catalog). */
-export function setCatalog(data) {
-  const nextProducts = data.products
-    .filter((p) => isAllowed(p.categorySlug))
-    .map((p) => ({
-      ...p,
-      image: PRODUCT_IMAGE_OVERRIDES[p.slug] || imageUrl(p.image),
-      designs: cleanDesigns(p.designs),
-      tag: p.tag && !hiddenTags.has(p.tag.toLowerCase()) ? p.tag : null,
-      isNew: p.tag === 'New Arrival',
-      bestSeller: p.tag === 'Best Seller',
-      featured: FEATURED_TAGS.includes(p.tag),
-    }));
-=======
 /**
  * Public Pooja API base.
  *
  * CRM.apiUrl should be the backend root, for example:
  * https://crm-dkc2.onrender.com
  */
-const API_ROOT = () => (CRM.apiUrl || '').replace(/\/+$/, '');
-
-const POOJA_API = () => `${API_ROOT()}/api/pooja`;
+const POOJA_API = () => {
+  const apiUrl = (CRM.apiUrl || '').replace(/\/+$/, '');
+  return /\/api\/pooja$/i.test(apiUrl) ? apiUrl : `${apiUrl}/api/pooja`;
+};
 
 /**
  * Convert backend image paths to complete URLs.
@@ -116,11 +96,10 @@ export function setCatalog(data) {
     .filter((product) => isAllowed(product.categorySlug))
     .map((product) => {
       const tag = product.tag || null;
->>>>>>> cfc24a8af18a584b196c9f0d12ca1e4f841dd028
 
       return {
         ...product,
-        image: imageUrl(product.image),
+        image: PRODUCT_IMAGE_OVERRIDES[product.slug] || imageUrl(product.image),
         designs: cleanDesigns(product.designs),
         tag:
           tag && !hiddenTags.has(String(tag).toLowerCase())
@@ -229,26 +208,17 @@ export async function getProductGallery(slug) {
     }
 
     const data = await response.json();
-<<<<<<< HEAD
-    if (!Array.isArray(data?.images)) return [];
-    const productImage = getProductBySlug(slug)?.image;
-    return data.images
-      .map((item) => {
-        const url = imageUrl(item?.url);
-        return productImage && /\/api\/product-image\/\d+$/.test(url) ? productImage : url;
-=======
-
     if (!Array.isArray(data?.images)) {
       console.error('Product gallery API did not return an images array.');
       return [];
     }
 
+    const productImage = getProductBySlug(slug)?.image;
     return data.images
       .map((item) => {
-        // Support either { url: "..." } or a direct URL string.
         const path = typeof item === 'string' ? item : item?.url;
-        return imageUrl(path);
->>>>>>> cfc24a8af18a584b196c9f0d12ca1e4f841dd028
+        const url = imageUrl(path);
+        return productImage && /\/api\/product-image\/\d+$/.test(url) ? productImage : url;
       })
       .filter(Boolean)
       .filter((url, index, all) => all.indexOf(url) === index);
