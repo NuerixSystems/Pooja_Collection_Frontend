@@ -273,6 +273,7 @@ function ProductDetails({ product }) {
               >
                 <SafeImage
                   src={selectedImage || product.image}
+                  fallbackSrc={category?.image}
                   alt={product.name}
                   label={product.name}
                   className="product-img"
@@ -306,6 +307,7 @@ function ProductDetails({ product }) {
                   >
                     <SafeImage
                       src={src}
+                      fallbackSrc={category?.image}
                       alt={`${product.name} image ${index + 1}`}
                       label={product.name}
                     />
@@ -455,6 +457,7 @@ function ProductDetails({ product }) {
               <SafeImage
                 key={selectedImage}
                 src={selectedImage}
+                fallbackSrc={category?.image}
                 alt={`${product.name}, image ${currentImageIndex + 1}`}
                 label={product.name}
                 className="product-lightbox-image"

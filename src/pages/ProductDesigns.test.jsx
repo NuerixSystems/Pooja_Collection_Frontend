@@ -1,15 +1,15 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { setCatalog } from '../services/catalog';
+import { getCategory, setCatalog } from '../services/catalog';
 import { renderApp, savedCart, seedCart } from '../test/utils';
 
 // Fixture catalogue: the shipped data lists no designs, so the design-selection flow is exercised
 // here against fixture data fed to the catalogue the same way the backend response is.
 const FIXTURE = {
-  categories: [{ slug: 'rings', name: 'Rings' }, { slug: 'dresses', name: 'Dresses' }],
+  categories: [{ slug: 'rings', name: 'Rings', image: '/media/pooja/categories/rings.webp' }, { slug: 'dresses', name: 'Dresses' }],
   products: [
-    { id: 'plain-ring', slug: 'plain-ring', name: 'Plain Ring', categorySlug: 'rings', description: 'One design', price: 100, tag: null },
+    { id: 'plain-ring', slug: 'plain-ring', name: 'Plain Ring', categorySlug: 'rings', description: 'One design', price: 100, tag: null, image: 'https://crm-dkc2.onrender.com/api/product-image/1' },
     {
       id: 'designer-ring', slug: 'designer-ring', name: 'Designer Ring', categorySlug: 'rings', description: 'Several designs', price: 200, tag: null,
       designs: [{ id: 'bow', label: 'Bow' }, { id: 'leaf', label: 'Leaf' }, { id: 'bow', label: 'Duplicate id is ignored' }, { id: 'x' }],
@@ -23,6 +23,17 @@ beforeEach(() => setCatalog(FIXTURE)); // runs after the shared setup's beforeEa
 const addButton = () => within(document.querySelector('.product-page-info')).getByRole('button', { name: /add to cart|maximum in cart/i });
 
 describe('products with designs', () => {
+  it('uses the category image when the product image fails on the detail page', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
+    try {
+      renderApp('/product/plain-ring');
+      fireEvent.error(await screen.findByRole('img', { name: 'Plain Ring' }));
+      expect(screen.getByRole('img', { name: 'Plain Ring' })).toHaveAttribute('src', getCategory('rings').image);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('shows only the designs the data lists (no invented or malformed ones)', () => {
     renderApp('/product/designer-ring');
     const group = screen.getByRole('group', { name: /choose a design/i });

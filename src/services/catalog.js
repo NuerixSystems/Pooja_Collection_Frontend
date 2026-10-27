@@ -8,6 +8,10 @@ import { CRM, EXCLUDED_CATEGORY_SLUGS, HIDDEN_TAGS } from '../config';
 const excluded = new Set(EXCLUDED_CATEGORY_SLUGS);
 const hiddenTags = new Set(HIDDEN_TAGS.map((t) => t.toLowerCase()));
 const isAllowed = (slug) => !excluded.has(String(slug).toLowerCase());
+const mediaBaseUrl = (CRM.mediaUrl || CRM.apiUrl).replace(/\/api\/pooja\/?$/, '').replace(/\/+$/, '');
+const PRODUCT_IMAGE_OVERRIDES = {
+  'anti-tarnish-watch': `${mediaBaseUrl}/media/pooja/products/watches.webp`,
+};
 
 // Image paths from the API are relative to the backend (e.g. /media/pooja/products/x.webp).
 export const imageUrl = (path) => {
@@ -37,7 +41,7 @@ export function setCatalog(data) {
     .filter((p) => isAllowed(p.categorySlug))
     .map((p) => ({
       ...p,
-      image: imageUrl(p.image),
+      image: PRODUCT_IMAGE_OVERRIDES[p.slug] || imageUrl(p.image),
       designs: cleanDesigns(p.designs),
       tag: p.tag && !hiddenTags.has(p.tag.toLowerCase()) ? p.tag : null,
       isNew: p.tag === 'New Arrival',
@@ -93,8 +97,12 @@ export async function getProductGallery(slug) {
     if (!response.ok) return [];
     const data = await response.json();
     if (!Array.isArray(data?.images)) return [];
+    const productImage = getProductBySlug(slug)?.image;
     return data.images
-      .map((item) => imageUrl(item?.url))
+      .map((item) => {
+        const url = imageUrl(item?.url);
+        return productImage && /\/api\/product-image\/\d+$/.test(url) ? productImage : url;
+      })
       .filter(Boolean)
       .filter((url, index, all) => all.indexOf(url) === index);
   } catch {
