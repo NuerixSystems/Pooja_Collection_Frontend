@@ -222,3 +222,5 @@ export default function ProductPage() {
   if (!product) return <NotFound message="We couldn't find that product." />;
   return <ProductDetails key={product.slug} product={product} />;
 }
+
+// This is recent code
