@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import RecommendedProducts from '../components/RecommendedProducts';
@@ -6,6 +5,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import SafeImage from '../components/SafeImage';
 import { HeartIcon } from '../components/Icons';
 import { useStore } from '../context/StoreContext';
+import { useUI } from '../context/UIContext'; // 👈 Added
 import { useAddToCart } from '../hooks/useAddToCart';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
@@ -14,6 +14,8 @@ import {
   getProductBySlug,
   getProductGallery,
 } from '../services/catalog';
+import { getAddresses, setDefaultAddress } from '../services/address'; // 👈 Added
+import { getSession } from '../services/auth'; // 👈 Added
 import { formatPrice } from '../utils/format';
 import NotFound from './NotFound';
 import './ProductPage.css';
@@ -135,6 +137,7 @@ function sanitizeDescriptionHtml(input) {
 
 function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
+  const { setCheckoutAddress } = useUI(); // 👈 Added
   const addToCart = useAddToCart();
 
   const [galleryImages, setGalleryImages] = useState([]);
@@ -142,6 +145,50 @@ function ProductDetails({ product }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [designId, setDesignId] = useState(null);
   const [designError, setDesignError] = useState(false);
+
+  // 👇 Added Address States
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  
+  const session = getSession();
+  const sessionToken = session?.token; 
+
+  // 👇 Added Address Fetching Logic
+  useEffect(() => {
+    if (sessionToken) {
+      getAddresses()
+        .then((data) => {
+          setAddresses(data);
+          const defaultAddr = data.find((a) => a.isDefault);
+          if (defaultAddr) {
+            setSelectedAddress(defaultAddr);
+            setCheckoutAddress(defaultAddr);
+          } else if (data.length > 0) {
+            setSelectedAddress(data[0]);
+            setCheckoutAddress(data[0]);
+          }
+        })
+        .catch(() => setAddresses([]));
+    }
+  }, [sessionToken, setCheckoutAddress]);
+
+  // 👇 Added Address Select Function
+  const handleSelectAddress = async (addr) => {
+    try {
+      await setDefaultAddress(addr.id);
+      setSelectedAddress(addr);
+      setShowAddressModal(false);
+      setAddresses((prev) =>
+        prev.map((a) => ({ ...a, isDefault: a.id === addr.id }))
+      );
+      setCheckoutAddress(addr); 
+    } catch (error) {
+      console.error('❌ Failed to select address:', error);
+      alert('Failed to update address. Please try again.');
+    }
+  };
+  // 👆 End of Added Address Logic
 
   const pickerRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -329,6 +376,34 @@ function ProductDetails({ product }) {
               )}
             </p>
 
+            {/* 👇 Added Address Box */}
+            <div className="delivery-box">
+              {sessionToken ? (
+                <div className="delivery-box-inner">
+                  <div className="delivery-info">
+                    <span className="delivery-label">Deliver to:</span>{' '}
+                    <span className="delivery-address">
+                      {selectedAddress
+                        ? `${selectedAddress.name}, ${selectedAddress.pincode}`
+                        : 'No address saved.'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressModal(true)}
+                    className="delivery-change-btn"
+                  >
+                    {selectedAddress ? 'Change' : 'Add'}
+                  </button>
+                </div>
+              ) : (
+                <p className="delivery-text">
+                  <Link to="/login" className="delivery-change">Login</Link> to see delivery options
+                </p>
+              )}
+            </div>
+            {/* 👆 End of Added Address Box */}
+
             {description.trim() && (
               hasHtml ? (
                 <div
@@ -507,6 +582,48 @@ function ProductDetails({ product }) {
           </div>
         </div>
       )}
+
+      {/* 👇 Added Address Modal */}
+      {showAddressModal && (
+        <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
+          <div className="address-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="address-modal-title">Select Delivery Address</h3>
+            {addresses.length === 0 ? (
+              <div className="address-modal-empty">
+                <p>No addresses saved.</p>
+                <Link to="/account/addresses" className="btn btn--ghost">Add New Address</Link>
+              </div>
+            ) : (
+              <ul className="address-modal-list">
+                {addresses.map((addr) => (
+                  <li
+                    key={addr.id}
+                    className={`address-modal-item ${selectedAddress?.id === addr.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectAddress(addr)}
+                  >
+                    <div className="address-modal-radio">
+                      <input type="radio" checked={selectedAddress?.id === addr.id} readOnly />
+                    </div>
+                    <div className="address-modal-details">
+                      <strong>{addr.name}</strong> {addr.isDefault && <span className="default-tag">Default</span>}
+                      <p>{addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}</p>
+                      <small>{addr.phone}</small>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              className="btn btn--ghost address-modal-close"
+              onClick={() => setShowAddressModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* 👆 End of Added Address Modal */}
 
       <ReviewsSection product={product} />
       <RecommendedProducts products={others} />
