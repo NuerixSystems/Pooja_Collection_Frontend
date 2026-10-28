@@ -14,7 +14,7 @@ export default function CategoryPage() {
 
   const products = getProducts({ categorySlug: slug });
   return (
-    <div className="container">
+    <div className="container category-page">
       <section className="section">
         <div className="section-head">
           <div>

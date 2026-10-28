@@ -119,14 +119,9 @@
   .home-product-window {
     width: 100%;
     padding: 2px 0 10px;
+    overflow: visible;
   }
-  .home-product-carousel > .home-carousel-arrow {
-    position: absolute;
-    top: 42%;
-    transform: translateY(-50%);
-  }
-  .home-product-carousel > .home-carousel-arrow:first-child { left: -8px; }
-  .home-product-carousel > .home-carousel-arrow:last-child { right: -8px; }
+  .home-product-carousel > .home-carousel-arrow { display: none; }
 }
 @media (max-width: 480px) {
   .home-trending-head { align-items: flex-start; }
