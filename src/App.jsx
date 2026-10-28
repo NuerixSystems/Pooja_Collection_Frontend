@@ -23,8 +23,9 @@ import NotFound from './pages/NotFound';
 import AccountPage from './pages/AccountPage';
 import EditProfilePage from './pages/EditProfilePage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
-import OrdersPage from './pages/OrdersPage';           // ← NEW
-import EnquiryPage from './pages/EnquiryPage';         // ← NEW
+import OrdersPage from './pages/OrdersPage';
+import EnquiryPage from './pages/EnquiryPage';
+import AddressBook from './pages/AddressBook';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useUI } from './context/UIContext';
 
@@ -94,11 +95,14 @@ export default function App() {
             <Route path="/account" element={<AccountPage />} />
             <Route path="/account/edit" element={<EditProfilePage />} />
             <Route path="/account/password" element={<ChangePasswordPage />} />
+            
+            {/* Address Book Route */}
+            <Route path="/account/addresses" element={<AddressBook />} />
 
             {/* Orders + Enquiries */}
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/enquiry" element={<EnquiryPage />} />
-
+          
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Page>

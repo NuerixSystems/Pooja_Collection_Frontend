@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
+
 function seoFiles(siteUrl) {
   return {
     name: 'seo-files',
@@ -57,6 +58,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), seoFiles(siteUrl)],
+    envDir: './',
     test: {
       environment: 'jsdom',
       setupFiles: './src/test/setup.js',

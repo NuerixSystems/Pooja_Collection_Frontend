@@ -230,8 +230,10 @@ export function StoreProvider({ children }) {
       dispatch({ type: 'cart/remove', key });
     };
 
+    // 👇 FIXED: clearCart ippo local state + server cart rendayum clear pannum
     const clearCart = () => {
       dispatch({ type: 'cart/clear' });
+      setServerCart(null); // 👈 Server cart state-ah clear pannu
     };
 
     const toggleWishlist = (id) => {

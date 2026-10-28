@@ -69,7 +69,21 @@ export async function placeOrderRemote({
   return order;
 }
 
-export const getOrder = (id) => readAll().find((o) => o.id === id) || null;
+/**
+ * Fetch a single order by ID from the API (for OrderSuccess page).
+ * Falls back to localStorage cache if the API fails (e.g. offline).
+ */
+export async function getOrder(id) {
+  try {
+    const orders = await api('/orders');
+    const found = orders.find((o) => o.id === id);
+    if (found) return found;
+  } catch {
+    /* fall through to cache */
+  }
+  // Fallback to local cache (if API call fails)
+  return readAll().find((o) => o.id === id) || null;
+}
 
 /**
  * Fetch the logged-in customer's orders from the backend.

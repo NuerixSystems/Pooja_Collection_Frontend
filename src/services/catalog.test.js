@@ -4,13 +4,43 @@ vi.mock('../config', async (orig) => ({ ...(await orig()), CRM: { tenantId: '8',
 
 import { EXCLUDED_CATEGORY_SLUGS } from '../config';
 import { API_CATALOG } from '../test/fixtures';
-import { getCategories, getCategory, getOtherProducts, getProductBySlug, getProducts, getRelatedProducts, searchSuggestions, setCatalog } from './catalog';
+import { getCategories, getCategory, getOtherProducts, getProductBySlug, getProductGallery, getProducts, getRelatedProducts, searchSuggestions, setCatalog } from './catalog';
 
 // Wording that must never reach a customer: supplier/platform names, internal stock notes,
 // and brand/licensing claims we can't verify.
 const BLOCKED = ['meesho', 'osweet', 'hello kitty', 'kitty', 'stock alert'];
 
 describe('catalogue shape (as served by the backend)', () => {
+  it('uses the deployed watch image for the Anti Tarnish Watch and its gallery', async () => {
+    const image = 'http://api.test/media/pooja/products/watches.webp';
+    setCatalog({
+      categories: [{ slug: 'watches', name: 'Watches', image: '' }],
+      products: [{
+        id: 'anti-tarnish-watch',
+        slug: 'anti-tarnish-watch',
+        name: 'Anti Tarnish Watch',
+        categorySlug: 'watches',
+        description: '',
+        price: 649,
+        tag: null,
+        image: 'https://crm-dkc2.onrender.com/api/product-image/1',
+      }],
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        images: [{ url: 'https://crm-dkc2.onrender.com/api/product-image/1' }],
+      }),
+    }));
+
+    try {
+      expect(getProductBySlug('anti-tarnish-watch').image).toBe(image);
+      await expect(getProductGallery('anti-tarnish-watch')).resolves.toEqual([image]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('has 7 categories and 7 products, one per category', () => {
     expect(getCategories().map((c) => c.slug)).toEqual([
       'watches', 'necklaces', 'earrings', 'rings', 'bracelets-and-bangles', 'bridal-traditional', 'men-s-collection',

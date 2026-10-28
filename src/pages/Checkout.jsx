@@ -5,6 +5,8 @@ import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { ApiError } from '../services/api';
+import { getAddresses } from '../services/address';
+import { getSession } from '../services/auth';
 import { placeOrderRemote } from '../services/orders';
 import { CHECKOUT_FIELDS, validateCheckout } from '../utils/checkout';
 import { formatPrice } from '../utils/format';
@@ -17,19 +19,61 @@ const newRequestId = () =>
 export default function Checkout() {
   const { lines, cartTotal, cartCount, clearCart } = useStore();
   const navigate = useNavigate();
-  const { open } = useUI();
-  const [values, setValues] = useState({});
+  const { open, checkoutAddress } = useUI();
+
+  // 👇 DEBUG LOG to check if address is in context
+  console.log('🟢 Checkout Address in context:', checkoutAddress);
+
+  const [values, setValues] = useState(() => {
+    if (checkoutAddress) {
+      return {
+        name: checkoutAddress.name || '',
+        phone: checkoutAddress.phone || '',
+        pincode: checkoutAddress.pincode || '',
+        address: checkoutAddress.addressLine || '',
+        city: checkoutAddress.city || '',
+        state: checkoutAddress.state || '',
+      };
+    }
+    return {};
+  });
+
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState({});
-  // Focus must move AFTER React has rendered the error state, so a failed submit records which
-  // field to focus (and a counter so repeated failures on the same field re-trigger the effect).
   const [focusRequest, setFocusRequest] = useState({ field: null, attempt: 0 });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  // Address feature
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const session = getSession();
+
   const inputs = useRef({});
-  // One id per attempt: if a response is lost and the customer retries, the server returns the same order.
   const requestId = useRef(newRequestId());
   useDocumentTitle('Checkout');
+
+  useEffect(() => {
+    if (session) {
+      getAddresses()
+        .then((data) => {
+          setSavedAddresses(data);
+          const defaultAddr = data.find(a => a.isDefault);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            setValues({
+              name: defaultAddr.name,
+              phone: defaultAddr.phone,
+              pincode: defaultAddr.pincode,
+              address: defaultAddr.addressLine,
+              city: defaultAddr.city,
+              state: defaultAddr.state,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [session]);
 
   useEffect(() => {
     if (focusRequest.field) inputs.current[focusRequest.field]?.focus();
@@ -46,6 +90,18 @@ export default function Checkout() {
       </div>
     );
   }
+
+  const handleSelectAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setValues({
+      name: addr.name,
+      phone: addr.phone,
+      pincode: addr.pincode,
+      address: addr.addressLine,
+      city: addr.city,
+      state: addr.state,
+    });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -67,7 +123,6 @@ export default function Checkout() {
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
       if (err instanceof ApiError && err.status === 401) open('login');
-      // The server definitively said no (not a dropped connection): the next attempt is a new request.
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) requestId.current = newRequestId();
       setSubmitting(false);
     }
@@ -79,6 +134,27 @@ export default function Checkout() {
         <div className="section-head"><h1 className="section-title">Checkout</h1></div>
         <div className="cart-layout">
           <form className="checkout-form" onSubmit={submit} noValidate>
+            {savedAddresses.length > 0 && (
+              <div className="saved-addresses mb-4">
+                <h3 className="text-lg font-semibold mb-2">Saved Addresses</h3>
+                <div className="space-y-2">
+                  {savedAddresses.map((addr) => (
+                    <label key={addr.id} className={`address-card border p-3 rounded cursor-pointer ${selectedAddressId === addr.id ? 'border-blue-500 bg-blue-50' : ''}`}>
+                      <input
+                        type="radio"
+                        name="savedAddress"
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => handleSelectAddress(addr)}
+                        className="mr-2"
+                      />
+                      <strong>{addr.name}</strong>, {addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}
+                      <span className="text-sm text-gray-500 ml-2">({addr.phone})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <h2>Delivery details</h2>
             <div className="field-grid">
               {CHECKOUT_FIELDS.map((f) => (
