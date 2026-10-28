@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BRAND, NAV_LINKS } from '../config';
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
 import { useIsLoggedIn } from '../hooks/useIsLoggedIn';
+import { searchSuggestions } from '../services/catalog';
+import { formatPrice } from '../utils/format';
 import { HeartIcon, MenuIcon, SearchIcon, UserIcon, CartIcon } from './Icons';
 import BackButton from './BackButton';
 import './Header.css';
@@ -68,6 +70,15 @@ export default function Header() {
   const { cartCount, wishlistCount } = useStore();
   const loggedIn = useIsLoggedIn();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 120);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const suggestions = useMemo(() => searchSuggestions(debouncedQuery), [debouncedQuery]);
+  const showSuggestions = Boolean(searchQuery.trim() && (suggestions.categories.length || suggestions.products.length));
 
   const handleAccount = () => {
     if (loggedIn) navigate('/account');
@@ -78,8 +89,17 @@ export default function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
     } else {
       open('search');
+    }
+  };
+
+  const handleProductSuggestion = (event, product) => {
+    setSearchQuery('');
+    if (window.matchMedia?.('(max-width: 760px)').matches) {
+      event.preventDefault();
+      navigate(`/category/${product.categorySlug}`);
     }
   };
 
@@ -87,7 +107,7 @@ export default function Header() {
     <header className="site-header">
       {/* Top Bar: Logo, Search, Icons */}
       <div className="header-top">
-        <div className="header-shell">
+        <div className={`header-shell${location.pathname === '/' ? ' header-shell--home' : ''}`}>
           <BackButton />
 
           <IconButton
@@ -110,18 +130,57 @@ export default function Header() {
           </Link>
 
           {/* New Amazon-style Search Bar */}
-          <form className="header-search" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search Pooja's Collection..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search products"
-            />
-            <button type="submit" aria-label="Search">
-              <SearchIcon size={20} />
-            </button>
-          </form>
+          <div className="header-search-wrap">
+            <form className="header-search" onSubmit={handleSearch} role="search">
+              <input
+                type="search"
+                placeholder="Search Pooja's Collection..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search products"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+                aria-controls="header-search-suggestions"
+                autoComplete="off"
+              />
+              <button type="submit" aria-label="Search">
+                <SearchIcon size={20} />
+              </button>
+            </form>
+            {showSuggestions && (
+              <div className="header-search-suggestions" id="header-search-suggestions" aria-label="Search suggestions">
+                {suggestions.categories.length > 0 && (
+                  <div className="header-search-suggestion-group">
+                    <p>Categories</p>
+                    {suggestions.categories.map((category) => (
+                      <Link
+                        key={category.slug}
+                        to={`/category/${category.slug}`}
+                        onClick={() => setSearchQuery('')}
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {suggestions.products.length > 0 && (
+                  <div className="header-search-suggestion-group">
+                    <p>Products</p>
+                    {suggestions.products.slice(0, 5).map((product) => (
+                      <Link
+                        key={product.id}
+                        to={`/product/${product.slug}`}
+                        onClick={(event) => handleProductSuggestion(event, product)}
+                      >
+                        <span>{product.name}</span>
+                        <span className="header-search-suggestion-price">{formatPrice(product.price)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <nav className="primary-nav" aria-label="Primary">
             <ul>

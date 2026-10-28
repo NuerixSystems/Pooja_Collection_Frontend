@@ -1,4 +1,7 @@
 .page-chips { margin-bottom: 24px; }
+@media (max-width: 760px) {
+  .category-page > .section > .page-chips { display: none; }
+}
 .sort select {
   padding: 8px 14px; border: 1px solid var(--gold); border-radius: 999px;
   background: var(--page); color: var(--burgundy); font: inherit;
