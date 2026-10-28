@@ -2,10 +2,7 @@
 //
 // VITE_CRM_API_URL should include the full base path of the Pooja API, e.g.:
 //   Local:      http://localhost:8000/api/pooja
-//   Production: https://nuerix-crm.onrender.com/api/pooja
-//
-// `path` passed to api() must NOT start with `/api`. It is appended directly
-// to VITE_CRM_API_URL, e.g. api('/catalog') => <base>/catalog.
+//   Production: https://crm-dkc2.onrender.com/api/pooja
 
 import { CRM } from '../config';
 import { getToken } from './session';
@@ -26,8 +23,12 @@ export async function api(path, { method = 'GET', body, headers = {}, timeoutMs 
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const token = getToken();
 
-  // Trim trailing slashes from the base and ensure `path` starts with a single slash.
-  const base = CRM.apiUrl.replace(/\/+$/, '');
+  // 👇 FIXED: Smart URL for Local and Production
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = isLocal 
+    ? 'http://localhost:8000/api/pooja' 
+    : 'https://crm-dkc2.onrender.com/api/pooja';
+
   const suffix = path ? (path.startsWith('/') ? path : `/${path}`) : '';
 
   let res;

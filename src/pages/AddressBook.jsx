@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { getAddresses, createAddress, deleteAddress, setDefaultAddress } from '../services/address';
 import { getSession } from '../services/auth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import './AddressBook.css'; // (Illa-na CSS file create panni, namma munnadi kudutha styles ah podunga)
+import './AddressBook.css';
 
 export default function AddressBook() {
   useDocumentTitle('Manage Addresses');
   const [addresses, setAddresses] = useState([]);
   const [form, setForm] = useState({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
   const [loading, setLoading] = useState(false);
+  
   const session = getSession();
 
   const loadAddresses = () => {
