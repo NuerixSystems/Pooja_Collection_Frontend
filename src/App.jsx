@@ -34,6 +34,22 @@ function RouteEffects() {
   const { close } = useUI();
 
   useEffect(() => {
+    const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/+$/, '');
+    const canonicalUrl = `${siteUrl}${pathname === '/' ? '/' : pathname}`;
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+
+    const privateRoutes = ['/account', '/cart', '/checkout', '/enquiry', '/orders', '/wishlist'];
+    const shouldHideFromSearch = privateRoutes.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`),
+    ) || pathname.startsWith('/order/');
+    document.querySelector('meta[name="robots"]')?.setAttribute(
+      'content',
+      shouldHideFromSearch ? 'noindex,follow' : 'index,follow',
+    );
+  }, [pathname]);
+
+  useEffect(() => {
     if (hash) document.querySelector(hash)?.scrollIntoView();
     else window.scrollTo(0, 0);
   }, [pathname, hash]);
