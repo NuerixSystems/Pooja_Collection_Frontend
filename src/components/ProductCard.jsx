@@ -1,8 +1,10 @@
 
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { useUI } from '../context/UIContext';
 import { useAddToCart } from '../hooks/useAddToCart';
 import { getCategory } from '../services/catalog';
+import { getSession } from '../services/session';
 import { formatPrice } from '../utils/format';
 import { HeartIcon } from './Icons';
 import SafeImage from './SafeImage';
@@ -41,6 +43,7 @@ function getDescriptionPreview(description, maxLength = 120) {
 
 export default function ProductCard({ product, compact = false }) {
   const { toggleWishlist, isWishlisted, isAtMax } = useStore();
+  const { open } = useUI();
   const addToCart = useAddToCart();
 
   const category = getCategory(product.categorySlug);
@@ -50,6 +53,14 @@ export default function ProductCard({ product, compact = false }) {
   const to = `/product/${product.slug}`;
 
   const descriptionPreview = getDescriptionPreview(product.description);
+
+  const handleWishlistToggle = () => {
+    if (!getSession() && !wished) {
+      open('login');
+      return;
+    }
+    toggleWishlist(product.id);
+  };
 
   return (
     <article
@@ -77,7 +88,7 @@ export default function ProductCard({ product, compact = false }) {
               ? `Remove ${product.name} from wishlist`
               : `Add ${product.name} to wishlist`
           }
-          onClick={() => toggleWishlist(product.id)}
+          onClick={handleWishlistToggle}
         >
           <HeartIcon
             size={20}

@@ -5,7 +5,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import SafeImage from '../components/SafeImage';
 import { HeartIcon } from '../components/Icons';
 import { useStore } from '../context/StoreContext';
-import { useUI } from '../context/UIContext'; // 👈 Added
+import { useUI } from '../context/UIContext';
 import { useAddToCart } from '../hooks/useAddToCart';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
@@ -14,8 +14,8 @@ import {
   getProductBySlug,
   getProductGallery,
 } from '../services/catalog';
-import { getAddresses, setDefaultAddress } from '../services/address'; // 👈 Added
-import { getSession } from '../services/auth'; // 👈 Added
+import { getAddresses, setDefaultAddress } from '../services/address';
+import { getSession } from '../services/auth';
 import { formatPrice } from '../utils/format';
 import NotFound from './NotFound';
 import './ProductPage.css';
@@ -26,16 +26,11 @@ function sanitizeDescriptionHtml(input) {
   const parser = new DOMParser();
   let doc = parser.parseFromString(input, 'text/html');
 
-  // Decode HTML-escaped descriptions.
   for (let i = 0; i < 3; i += 1) {
     const decodedText = doc.body.textContent || '';
-
     if (!/<\/?[a-z][\s\S]*>/i.test(decodedText)) break;
-
     const decodedDoc = parser.parseFromString(decodedText, 'text/html');
-
     if (decodedDoc.body.innerHTML === doc.body.innerHTML) break;
-
     doc = decodedDoc;
   }
 
@@ -83,11 +78,9 @@ function sanitizeDescriptionHtml(input) {
 
       if (originalStyle) {
         const safeStyles = [];
-
         for (const declaration of originalStyle.split(';')) {
           const colon = declaration.indexOf(':');
           if (colon === -1) continue;
-
           const property = declaration.slice(0, colon).trim().toLowerCase();
           const value = declaration.slice(colon + 1).trim();
 
@@ -99,7 +92,6 @@ function sanitizeDescriptionHtml(input) {
             safeStyles.push(`${property}: ${value}`);
           }
         }
-
         if (safeStyles.length) {
           node.setAttribute('style', safeStyles.join('; '));
         }
@@ -108,10 +100,8 @@ function sanitizeDescriptionHtml(input) {
       if (tag === 'A' && originalHref) {
         try {
           const url = new URL(originalHref, window.location.origin);
-
           if (['https:', 'http:', 'mailto:'].includes(url.protocol)) {
             node.setAttribute('href', url.href);
-
             if (url.protocol !== 'mailto:') {
               node.setAttribute('target', '_blank');
               node.setAttribute('rel', 'noopener noreferrer');
@@ -137,7 +127,7 @@ function sanitizeDescriptionHtml(input) {
 
 function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
-  const { setCheckoutAddress } = useUI(); // 👈 Added
+  const { open, setCheckoutAddress } = useUI();
   const addToCart = useAddToCart();
 
   const [galleryImages, setGalleryImages] = useState([]);
@@ -146,7 +136,6 @@ function ProductDetails({ product }) {
   const [designId, setDesignId] = useState(null);
   const [designError, setDesignError] = useState(false);
 
-  // 👇 Added Address States
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -154,7 +143,6 @@ function ProductDetails({ product }) {
   const session = getSession();
   const sessionToken = session?.token; 
 
-  // 👇 Added Address Fetching Logic
   useEffect(() => {
     if (sessionToken) {
       getAddresses()
@@ -173,7 +161,6 @@ function ProductDetails({ product }) {
     }
   }, [sessionToken, setCheckoutAddress]);
 
-  // 👇 Added Address Select Function
   const handleSelectAddress = async (addr) => {
     try {
       await setDefaultAddress(addr.id);
@@ -188,7 +175,14 @@ function ProductDetails({ product }) {
       alert('Failed to update address. Please try again.');
     }
   };
-  // 👆 End of Added Address Logic
+
+  const handleWishlistToggle = () => {
+    if (!session && !wished) {
+      open('login');
+      return;
+    }
+    toggleWishlist(product.id);
+  };
 
   const pickerRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -199,23 +193,19 @@ function ProductDetails({ product }) {
     getProductGallery(product.slug)
       .then((images) => {
         if (!active) return;
-
         const uniqueImages = [...new Set(
           (images || []).filter(
             (image) => typeof image === 'string' && image.trim()
           )
         )];
-
         const allImages = uniqueImages.length
           ? uniqueImages
           : [product.image].filter(Boolean);
-
         setGalleryImages(allImages);
         setSelectedImage(allImages[0] || '');
       })
       .catch((error) => {
         console.error('Failed to load product gallery:', error);
-
         if (active) {
           const fallback = [product.image].filter(Boolean);
           setGalleryImages(fallback);
@@ -245,20 +235,16 @@ function ProductDetails({ product }) {
 
   const showImage = (index) => {
     if (!galleryImages.length) return;
-
     const nextIndex =
       (index + galleryImages.length) % galleryImages.length;
-
     setSelectedImage(galleryImages[nextIndex]);
   };
 
   const showPrevious = () => showImage(currentImageIndex - 1);
   const showNext = () => showImage(currentImageIndex + 1);
 
-  // Lock background scrolling and support keyboard navigation.
   useEffect(() => {
     if (!lightboxOpen) return undefined;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
@@ -285,7 +271,6 @@ function ProductDetails({ product }) {
 
   const add = () => {
     const result = addToCart(product.id, designId);
-
     if (result.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
@@ -376,16 +361,26 @@ function ProductDetails({ product }) {
               )}
             </p>
 
-            {/* 👇 Added Address Box */}
+            {/* 👇 Address Box (Updated Design) */}
             <div className="delivery-box">
               {sessionToken ? (
                 <div className="delivery-box-inner">
+                  <div className="delivery-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5C2336" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </div>
                   <div className="delivery-info">
-                    <span className="delivery-label">Deliver to:</span>{' '}
+                    <span className="delivery-label">Deliver to:</span>
                     <span className="delivery-address">
-                      {selectedAddress
-                        ? `${selectedAddress.name}, ${selectedAddress.pincode}`
-                        : 'No address saved.'}
+                      {selectedAddress ? (
+                        <>
+                          <strong>{selectedAddress.name}</strong> {selectedAddress.addressLine}, {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.pincode}
+                        </>
+                      ) : (
+                        'No address saved.'
+                      )}
                     </span>
                   </div>
                   <button
@@ -393,7 +388,7 @@ function ProductDetails({ product }) {
                     onClick={() => setShowAddressModal(true)}
                     className="delivery-change-btn"
                   >
-                    {selectedAddress ? 'Change' : 'Add'}
+                    {selectedAddress ? 'Change' : 'Add'} <span style={{ fontSize: '16px' }}>›</span>
                   </button>
                 </div>
               ) : (
@@ -402,7 +397,7 @@ function ProductDetails({ product }) {
                 </p>
               )}
             </div>
-            {/* 👆 End of Added Address Box */}
+            {/* 👆 End of Address Box */}
 
             {description.trim() && (
               hasHtml ? (
@@ -472,7 +467,7 @@ function ProductDetails({ product }) {
                   wished ? 'is-on' : ''
                 }`}
                 aria-pressed={wished}
-                onClick={() => toggleWishlist(product.id)}
+                onClick={handleWishlistToggle}
               >
                 <HeartIcon
                   size={20}
