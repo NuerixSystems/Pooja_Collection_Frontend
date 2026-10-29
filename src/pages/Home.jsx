@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import CategoryGrid from '../components/CategoryGrid';
 import ProductGrid from '../components/ProductGrid';
-import { OurStory, WhyChooseUs } from '../components/HomeSections';
+import { FeaturedProducts, OurStory, WhyChooseUs } from '../components/HomeSections';
 import { ChevronRightIcon } from '../components/Icons';
 import { getProducts } from '../services/catalog';
 import './Home.css';
@@ -10,6 +10,8 @@ import './Home.css';
 export default function Home() {
   const productsRef = useRef(null);
   const products = getProducts();
+  const featuredProducts = products.slice(0, 4);
+  const trendingProducts = products.slice(4);
 
   const scrollProducts = (direction) => {
     if (productsRef.current) {
@@ -36,30 +38,33 @@ export default function Home() {
         <span className="home-divider-line" />
       </div>
 
-      <section className="section section--trending home-trending" aria-labelledby="trend-title">
-        <div className="home-trending-head">
-          <div>
-            <h2 id="trend-title" className="section-title">Trending now</h2>
-            <p className="section-sub">Our most loved products, handpicked for you</p>
+      {trendingProducts.length > 0 && (
+        <section className="section section--trending home-trending" aria-labelledby="trend-title">
+          <div className="home-trending-head">
+            <div>
+              <h2 id="trend-title" className="section-title">Trending now</h2>
+              <p className="section-sub">Our most loved products, handpicked for you</p>
+            </div>
+            <Link to="/shop" className="text-link">View all <ChevronRightIcon size={18} /></Link>
           </div>
-          <Link to="/shop" className="text-link">View all <ChevronRightIcon size={18} /></Link>
-        </div>
 
-        <div className="home-product-carousel">
-          <button type="button" className="home-carousel-arrow" aria-label="Previous products" onClick={() => scrollProducts(-1)}>
-            <ChevronRightIcon size={20} className="is-reversed" />
-          </button>
-          <div className="home-product-window" ref={productsRef}>
-            <ProductGrid products={products} variant="home" />
+          <div className="home-product-carousel">
+            <button type="button" className="home-carousel-arrow" aria-label="Previous products" onClick={() => scrollProducts(-1)}>
+              <ChevronRightIcon size={20} className="is-reversed" />
+            </button>
+            <div className="home-product-window" ref={productsRef}>
+              <ProductGrid products={trendingProducts} variant="home" />
+            </div>
+            <button type="button" className="home-carousel-arrow" aria-label="Next products" onClick={() => scrollProducts(1)}>
+              <ChevronRightIcon size={20} />
+            </button>
           </div>
-          <button type="button" className="home-carousel-arrow" aria-label="Next products" onClick={() => scrollProducts(1)}>
-            <ChevronRightIcon size={20} />
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       <OurStory />
       <WhyChooseUs />
+      <FeaturedProducts products={featuredProducts} />
     </div>
   );
 }
