@@ -22,5 +22,14 @@ export default function SafeImage({ src, fallbackSrc, alt, label, className = ''
       </div>
     );
   }
-  return <img src={imageSrc} alt={alt} className={className} loading="lazy" onError={handleError} {...rest} />;
+
+  return (
+    <img 
+      src={imageSrc} 
+      alt={alt} 
+      className={className} 
+      onError={handleError} 
+      {...rest} 
+    />
+  );
 }

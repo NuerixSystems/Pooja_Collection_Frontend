@@ -60,12 +60,13 @@ describe('clickable product cards', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Contact us' })).toBeInTheDocument();
   });
 
-  it('wishlist button on a card does not navigate', async () => {
+  it('asks guests to log in before wishlisting from a card', async () => {
     const user = userEvent.setup();
     renderApp('/category/rings');
     await user.click(screen.getByRole('button', { name: /add gold tulip rings - 3 set to wishlist/i }));
     expect(screen.getByRole('heading', { level: 1, name: 'Rings' })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('pooja-collection:store:v1')).wishlist).toEqual([RING]);
+    expect(screen.getByRole('dialog', { name: /log in/i })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('pooja-collection:store:v1')).wishlist).toEqual([]);
   });
 });
 
