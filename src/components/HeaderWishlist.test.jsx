@@ -23,10 +23,19 @@ describe('navbar wishlist heart', () => {
     expect(actions.at(-1)).toBe(header().getByRole('button', { name: /^cart/i }));
   });
 
-  it('is visible on mobile too (the login icon is the only header action hidden there)', () => {
+  it('shows both the account shortcut and wishlist on mobile', () => {
     renderApp('/');
+    const account = header().getByRole('button', { name: 'Log in' });
+    expect(account).not.toHaveClass('hide-mobile');
+    expect(account.closest('.hide-mobile')).toBeNull();
     expect(heart()).not.toHaveClass('hide-mobile');
     expect(heart().closest('.hide-mobile')).toBeNull();
+  });
+
+  it('labels the account shortcut for a signed-in customer', () => {
+    act(() => saveSession({ token: 'customer-token', customer: { id: 42, name: 'Pooja' } }));
+    renderApp('/');
+    expect(header().getByRole('button', { name: 'My Account' })).toBeInTheDocument();
   });
 
   it('has no badge when nothing is saved', () => {
