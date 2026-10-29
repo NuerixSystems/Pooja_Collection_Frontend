@@ -4,8 +4,6 @@ import { formatPrice } from '../utils/format';
 import SafeImage from './SafeImage';
 import './RecommendedProducts.css';
 
-// "You May Also Like": a compact card per product (image, category, name, price). The whole card opens
-// that product's page through a stretched link on the name, same pattern as ProductCard.
 export default function RecommendedProducts({ products }) {
   return (
     <section className="section reco" aria-labelledby="reco-title">
@@ -17,7 +15,13 @@ export default function RecommendedProducts({ products }) {
           {products.map((p) => (
             <article className="reco-card" key={p.id}>
               <div className="reco-media">
-                <SafeImage src={p.image} alt="" label={p.name} className="reco-img" />
+                <SafeImage 
+                  src={p.image} 
+                  fallbackSrc={getCategory(p.categorySlug)?.image} 
+                  alt={p.name} 
+                  label={p.name} 
+                  className="reco-img" 
+                />
               </div>
               <div className="reco-info">
                 <p className="reco-cat">{getCategory(p.categorySlug)?.name}</p>
