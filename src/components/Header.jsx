@@ -205,7 +205,6 @@ export default function Header() {
             <IconButton
               label={loggedIn ? 'My Account' : 'Log in'}
               onClick={handleAccount}
-              className="hide-mobile"
             >
               <UserIcon size={26} />
             </IconButton>

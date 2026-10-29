@@ -218,8 +218,6 @@ a.icon-btn { text-decoration: none; }
     font-size: 1.2rem; 
   }
   
-  .hide-mobile { display: none !important; }
-
   /* Make search bar take full width below the top row on mobile */
   .header-search {
     order: 1;
@@ -312,7 +310,6 @@ a.icon-btn { text-decoration: none; }
   .header-shell--home .menu-btn { grid-column: 1; }
   .header-shell--home .brand { grid-column: 2; }
   .header-shell--home .header-actions { grid-column: 3; }
-  .hide-mobile { display: none !important; }
   .header-search-wrap {
     grid-column: 1 / -1;
     grid-row: 2;
