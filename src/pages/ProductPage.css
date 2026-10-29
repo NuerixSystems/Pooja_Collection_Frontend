@@ -42,6 +42,9 @@
 }
 
 
+/* this is recent changes */
+
+
 /* Multi-image product gallery */
 .product-page-gallery { width: 100%; min-width: 0; }
 .product-gallery-thumbnails { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -561,5 +564,228 @@
   .product-page-actions .product-page-add {
     min-width: 130px;
     padding: 9px 16px;
+  }
+}
+
+
+
+/* =========================================
+   Address Box & Modal Styles (Newly Added)
+   ========================================= */
+
+.delivery-box {
+  margin: 12px 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(184, 147, 90, 0.3);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  width: 100%;
+}
+
+.delivery-box-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.delivery-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FAF5EF;
+  padding: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.delivery-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.delivery-label {
+  color: #888;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.delivery-address {
+  display: block;
+  font-size: 13.5px;
+  color: #333;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.delivery-address strong {
+  color: #111;
+  margin-right: 4px;
+}
+
+.delivery-change-btn {
+  background: #FDFBF7;
+  border: 1px solid #EADBC8;
+  color: #5C2336;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.delivery-change-btn:hover {
+  background: #F5EFE6;
+}
+
+.delivery-text {
+  margin: 0;
+  color: var(--muted);
+}
+
+.delivery-change {
+  color: var(--burgundy);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Address Modal Styles */
+.address-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.address-modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.address-modal-title {
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.address-modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.address-modal-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.address-modal-item:hover {
+  border-color: var(--gold);
+  background: #fafafa;
+}
+
+.address-modal-item.selected {
+  border-color: var(--burgundy);
+  background: #fff9f5;
+}
+
+.address-modal-radio {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.address-modal-radio input {
+  cursor: pointer;
+}
+
+.address-modal-details p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.address-modal-details small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.default-tag {
+  background: var(--gold);
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.address-modal-empty {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.address-modal-empty p {
+  margin-bottom: 12px;
+}
+
+.address-modal-close {
+  width: 100%;
+}
+
+@media (max-width: 650px) {
+  .product-page-gallery {
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  .product-page-info {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .product-page-desc,
+  .product-rich-description {
+    overflow-wrap: anywhere;
+  }
+
+  .product-page-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .product-page-actions .product-page-add,
+  .product-page-actions .product-page-wish {
+    width: min(100%, 320px);
+    min-width: 0;
+    align-self: flex-start;
   }
 }

@@ -173,13 +173,13 @@ describe('shop + product cards (no regressions)', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Gold Tulip Rings - 3 Set' })).toBeInTheDocument();
   });
 
-  it('adds to cart and wishlists from a filtered result', async () => {
+  it('requires login to wishlist a product from a filtered result', async () => {
     const user = userEvent.setup();
     renderApp('/shop?category=rings');
     await user.click(screen.getByRole('button', { name: /add gold tulip rings - 3 set to wishlist/i }));
-    expect(JSON.parse(localStorage.getItem('pooja-collection:store:v1')).wishlist).toEqual([RING]);
-    await user.click(within(cards()[0]).getByRole('button', { name: /add to cart/i }));
-    expect(savedCart()).toEqual([{ key: RING, id: RING, designId: null, qty: 1 }]);
+    expect(screen.getByRole('dialog', { name: /log in/i })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('pooja-collection:store:v1')).wishlist).toEqual([]);
+    expect(savedCart()).toEqual([]);
   });
 
   it('every card has the same structure: image frame, name, price and a button inside the footer', () => {

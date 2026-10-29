@@ -23,10 +23,19 @@ describe('navbar wishlist heart', () => {
     expect(actions.at(-1)).toBe(header().getByRole('button', { name: /^cart/i }));
   });
 
-  it('is visible on mobile too (the login icon is the only header action hidden there)', () => {
+  it('shows both the account shortcut and wishlist on mobile', () => {
     renderApp('/');
+    const account = header().getByRole('button', { name: 'Log in' });
+    expect(account).not.toHaveClass('hide-mobile');
+    expect(account.closest('.hide-mobile')).toBeNull();
     expect(heart()).not.toHaveClass('hide-mobile');
     expect(heart().closest('.hide-mobile')).toBeNull();
+  });
+
+  it('labels the account shortcut for a signed-in customer', () => {
+    act(() => saveSession({ token: 'customer-token', customer: { id: 42, name: 'Pooja' } }));
+    renderApp('/');
+    expect(header().getByRole('button', { name: 'My Account' })).toBeInTheDocument();
   });
 
   it('has no badge when nothing is saved', () => {
@@ -37,6 +46,7 @@ describe('navbar wishlist heart', () => {
 
   it('shows a count badge that follows adds and removes, with an accessible name', async () => {
     const user = userEvent.setup();
+    act(() => saveSession({ token: 'test-token', customer: { id: 1, name: 'Pooja' } }));
     renderApp('/shop');
     await user.click(screen.getByRole('button', { name: new RegExp(`add ${RING_NAME} to wishlist`, 'i') }));
     expect(heart().querySelector('.badge')).toHaveTextContent('1');
@@ -96,12 +106,22 @@ describe('navbar wishlist heart', () => {
     expect(savedWishlist()).toEqual(['kashmiri-peacock-bracelet-watch']);
   });
 
-  it('works for guests: saving needs no login', async () => {
+  it('asks guests to log in before saving a product', async () => {
     const user = userEvent.setup();
     renderApp('/shop');
     await user.click(screen.getByRole('button', { name: new RegExp(`add ${RING_NAME} to wishlist`, 'i') }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(savedWishlist()).toEqual([RING]);
+    expect(screen.getByRole('dialog', { name: /log in/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Log in' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Sign up' })).toBeInTheDocument();
+    expect(savedWishlist()).toEqual([]);
+  });
+
+  it('asks guests to log in before saving from the product detail page', async () => {
+    const user = userEvent.setup();
+    renderApp(`/product/${RING}`);
+    await user.click(screen.getByRole('button', { name: /^save$/i }));
+    expect(screen.getByRole('dialog', { name: /log in/i })).toBeInTheDocument();
+    expect(savedWishlist()).toEqual([]);
   });
 
   it('clears the visible wishlist on logout and restores it for the same customer', async () => {

@@ -25,7 +25,10 @@ npm run preview      # serve dist/ locally (includes SPA fallback)
 
 Environment variables (see `.env.example`): `VITE_TENANT_ID` and `VITE_CRM_API_URL` (backend base URL, e.g. `http://localhost:8000`).
 `npm run dev` reads `.env.development`, which points at the local backend; tests and production builds do not.
-For a deployed build, set `VITE_CRM_API_URL` to your backend's public URL.
+For a deployed build, set `VITE_CRM_API_URL` to your backend's public URL. Production SEO metadata defaults to
+`https://poojascollection.com`; override it with `VITE_SITE_URL` if the storefront domain changes. `public/robots.txt`
+and `public/sitemap.xml` are tracked source files copied into `dist/` during the build. The sitemap lists stable
+storefront and information pages; product and category URLs are supplied by the backend catalogue and are not included.
 
 ## Project layout
 
@@ -106,7 +109,15 @@ opening or refreshing a deep link returns a 404 (the home page still works, whic
 
 Serve the contents of `dist/` and add the rule for your host:
 
-**Netlify / Cloudflare Pages** (the rule below is already in `public/_redirects`, and Vite copies it to `dist/`; this is the project's assumed host, since none is configured yet):
+The production build copies `public/robots.txt` and `public/sitemap.xml` into `dist/`. Account, cart, checkout, order,
+wishlist and enquiry pages are marked `noindex` by the app; `robots.txt` allows crawlers to read that directive and
+points them to the sitemap.
+
+**Hostinger / Apache / LiteSpeed:** Vite copies `public/.htaccess` into `dist/`. Upload hidden files as well as visible files.
+The rule serves real files (including `robots.txt` and `sitemap.xml`) directly, and sends only application routes to
+`index.html`.
+
+**Netlify / Cloudflare Pages** (`public/_redirects` is copied into `dist/`):
 ```
 /*    /index.html   200
 ```
@@ -124,14 +135,14 @@ location / {
 }
 ```
 
-**Apache** (`.htaccess` in the web root)
+**Apache** (if not using the project's `public/.htaccess`)
 ```apache
 RewriteEngine On
 RewriteBase /
-RewriteRule ^index\.html$ - [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^ index.html [L]
 ```
 
 **Firebase Hosting**: `firebase.json`
@@ -147,7 +158,8 @@ response status is 404, which is poor for SEO).
 The app is served from the domain root. If you deploy under a sub-path, set `base` in `vite.config.js` and a
 matching `basename` on `BrowserRouter`.
 
-**Check after every deploy:** open `/product/gold-tulip-rings-3-set` directly in a fresh tab and refresh it. It should load, not 404.
+**Check after every deploy:** `/robots.txt` should return plain text, `/sitemap.xml` should return XML, and opening
+`/product/gold-tulip-rings-3-set` directly in a fresh tab and refreshing it should load, not 404.
 
 ## Known gaps
 

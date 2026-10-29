@@ -47,6 +47,69 @@
   height: 44px;
 }
 
+.header-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  max-width: 700px;
+}
+
+.header-search-wrap .header-search { width: 100%; max-width: none; }
+
+.header-search-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--page, #fbf7f1);
+  border: 1px solid var(--line, rgba(90, 31, 54, .16));
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(63, 20, 38, .16);
+}
+
+.header-search-suggestion-group + .header-search-suggestion-group {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line, rgba(90, 31, 54, .16));
+}
+
+.header-search-suggestion-group p {
+  margin: 4px 8px;
+  color: var(--muted, #8a6b5e);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.header-search-suggestion-group a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 8px;
+  border-radius: 6px;
+  color: var(--burgundy, #5a1f36);
+  font-size: .92rem;
+  text-decoration: none;
+}
+
+.header-search-suggestion-group a:hover,
+.header-search-suggestion-group a:focus-visible {
+  background: rgba(184, 147, 90, .12);
+}
+
+.header-search-suggestion-price {
+  flex: none;
+  color: var(--muted, #8a6b5e);
+  font-size: .85rem;
+}
+
 .header-search input {
   flex: 1;
   border: none;
@@ -155,14 +218,12 @@ a.icon-btn { text-decoration: none; }
     font-size: 1.2rem; 
   }
   
-  .hide-mobile { display: none !important; }
-
   /* Make search bar take full width below the top row on mobile */
   .header-search {
     order: 1;
     width: 100%;
     max-width: 100%;
-    margin-top: 4px;
+    margin-top: 0;
     flex-basis: 100%;
   }
 
@@ -234,24 +295,34 @@ a.icon-btn { text-decoration: none; }
 
 @media (max-width: 760px) {
   .header-top { padding: 8px 12px; }
-  .header-shell { display: flex; flex-wrap: wrap; gap: 8px; }
-  .back-btn { position: static; order: -3; transform: none; }
-  .menu-btn { display: grid; order: -2; }
-  .brand { order: -1; margin-right: auto; gap: 8px; }
+  .header-shell {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .back-btn { position: static; grid-column: 1; grid-row: 1; transform: none; }
+  .menu-btn { display: grid; grid-column: 2; grid-row: 1; }
+  .brand { grid-column: 3; grid-row: 1; min-width: 0; margin-right: 0; gap: 8px; }
   .brand-logo { width: 44px; height: 44px; }
-  .brand-name { display: block; font-size: 1.08rem; }
-  .header-actions { order: 0; }
-  .hide-mobile { display: none !important; }
-  .header-search {
-    order: 1;
-    flex: 0 0 100%;
+  .brand-name { display: block; font-size: 1.08rem; overflow: hidden; text-overflow: ellipsis; }
+  .header-actions { grid-column: 4; grid-row: 1; gap: 0; }
+  .header-shell--home { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .header-shell--home .menu-btn { grid-column: 1; }
+  .header-shell--home .brand { grid-column: 2; }
+  .header-shell--home .header-actions { grid-column: 3; }
+  .header-search-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
     width: 100%;
+    flex: none;
     max-width: 100%;
     margin-top: 2px;
   }
+  .header-search-wrap .header-search { height: 40px; }
   .primary-nav {
-    order: 2;
-    flex: 0 0 100%;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
     justify-content: flex-start;
     padding: 0;
   }
@@ -269,7 +340,15 @@ a.icon-btn { text-decoration: none; }
 
 @media (max-width: 480px) {
   .brand-logo { width: 38px; height: 38px; }
-  .brand-name { font-size: .98rem; }
+  .brand-name { font-size: .94rem; }
   .icon-btn { width: 36px; height: 38px; }
   .primary-nav ul { padding-bottom: 2px; }
+}
+
+@media (max-width: 360px) {
+  .back-btn { display: none; }
+  .header-shell { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .menu-btn { grid-column: 1; }
+  .brand { grid-column: 2; }
+  .header-actions { grid-column: 3; }
 }

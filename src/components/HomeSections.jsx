@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom';
 import { BRAND } from '../config';
 import { getCategory, getCategories } from '../services/catalog';
-import { ArrowRightIcon, AwardIcon, ChatIcon, GemIcon, GiftIcon } from './Icons';
+import ProductGrid from './ProductGrid';
+import { ArrowRightIcon, AwardIcon, GemIcon } from './Icons';
 import './HomeSections.css';
 
 const FEATURES = [
   { icon: GemIcon, title: 'Elegant Designs', text: 'Pieces chosen for their beauty and style.' },
   { icon: AwardIcon, title: 'Quality Craftsmanship', text: 'Jewellery selected with care and attention.' },
-  { icon: GiftIcon, title: 'A Collection for Every Occasion', text: 'From everyday wear to festive favourites.' },
-  { icon: ChatIcon, title: 'Customer Support', text: 'Questions about a piece? Just send us a message.' },
 ];
 
 export function OurStory() {
@@ -39,6 +38,23 @@ export function WhyChooseUs() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+export function FeaturedProducts({ products }) {
+  if (!products.length) return null;
+
+  return (
+    <section className="home-picks" aria-labelledby="picks-title">
+      <div className="home-picks-head">
+        <div>
+          <h2 id="picks-title" className="section-title">Shop our favourites</h2>
+          <p className="section-sub">Find a piece you’ll love, ready to add to your cart.</p>
+        </div>
+        <Link to="/shop" className="text-link">View all <ArrowRightIcon size={18} /></Link>
+      </div>
+      <ProductGrid products={products} variant="picks" compact={false} />
     </section>
   );
 }
