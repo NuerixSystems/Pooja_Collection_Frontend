@@ -789,3 +789,100 @@
     align-self: flex-start;
   }
 }
+
+/* =========================================
+   PRODUCT DETAIL STOCK STATES
+   No blur or dimming; wishlist remains usable.
+========================================= */
+
+.product-page-media {
+  position: relative;
+}
+
+/* Stock badge on the product image */
+.product-page-stock-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 4px;
+  background: #222;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
+}
+
+.product-page-stock-badge--low {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Keep the image and product information completely clear */
+.product-page .product-page-media,
+.product-page .product-page-media .product-img,
+.product-page .product-page-info {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Stock information below the price */
+.product-page-stock-note {
+  margin: -6px 0 0;
+  color: #856404;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.product-page-stock-note--out {
+  color: #a12626;
+}
+
+/* Add to Cart and Out of Stock have identical dimensions */
+.product-page-actions .product-page-add,
+.product-page-actions .product-page-add--out-of-stock {
+  box-sizing: border-box;
+  width: auto;
+  min-width: 150px;
+  min-height: 44px;
+  padding: 10px 22px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.product-page-actions .product-page-add--out-of-stock,
+.product-page-actions .product-page-add--out-of-stock:disabled {
+  background: #e5e5e5;
+  border: 1px solid #ccc;
+  color: #555;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Wishlist remains active, including when stock is zero */
+.product-page-actions .product-page-wish {
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 1;
+}
+
+@media (max-width: 650px) {
+  .product-page-actions .product-page-add,
+  .product-page-actions .product-page-add--out-of-stock {
+    width: min(100%, 320px);
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 16px;
+  }
+}
