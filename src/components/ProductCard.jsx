@@ -70,6 +70,14 @@ export default function ProductCard({ product, compact = false }) {
         <SafeImage
           src={product.image}
           fallbackSrc={category?.image}
+          alt=""
+          aria-hidden="true"
+          label={product.name}
+          className="product-img-backdrop"
+        />
+        <SafeImage
+          src={product.image}
+          fallbackSrc={category?.image}
           alt={product.name}
           label={product.name}
           className="product-img"

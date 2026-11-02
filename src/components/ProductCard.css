@@ -12,10 +12,10 @@
 .product-link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
 .product-card:hover .product-link { color: var(--gold); }
 
-/* Every image sits in the same 4:5 frame, centred and cropped (never stretched). */
-.product-media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--cream); border-bottom: 1px solid rgba(184, 147, 90, .3); }
-.product-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform .45s ease; }
-.product-card:hover .product-img { transform: scale(1.04); }
+/* A shared frame aligns card details; the foreground image remains uncropped. */
+.product-media { position: relative; aspect-ratio: 1; overflow: hidden; isolation: isolate; background: var(--cream); border-bottom: 1px solid rgba(184, 147, 90, .3); }
+.product-img-backdrop { position: absolute; inset: -12px; width: calc(100% + 24px); max-width: none; height: calc(100% + 24px); object-fit: cover; filter: blur(16px); opacity: .65; }
+.product-img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
 .product-media .safe-image-fallback { width: 100%; height: 100%; }
 
 .product-badge {
@@ -34,9 +34,9 @@
 .product-cat { margin: 0; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
 .product-name {
   font-family: var(--font-ui); font-size: 1rem; font-weight: 500; line-height: 1.35;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: 2.7em; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.product-desc { margin: 0; font-size: .85rem; line-height: 1.4; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.product-desc { min-height: 3em; margin: 0; font-size: .85rem; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .product-foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
 .product-price { margin: 0; font-weight: 600; font-size: 1.05rem; display: flex; gap: 8px; align-items: baseline; }
 .product-price s { font-weight: 400; color: var(--muted); font-size: .9rem; }
@@ -62,7 +62,7 @@
 /* Keep the five Home page trending cards compact without changing other product grids. */
 @media (min-width: 1001px) {
   .section--trending .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px 14px; }
-  .section--trending .product-media { aspect-ratio: 1 / 1; }
+  .section--trending .product-media { aspect-ratio: 1; }
   .section--trending .product-info { padding: 10px 11px 12px; gap: 2px; }
   .section--trending .product-cat { font-size: .72rem; }
   .section--trending .product-name { font-size: .94rem; }
@@ -89,7 +89,11 @@
   border-radius: 10px;
   background: #f7f2e9;
 }
-.product-card--compact .product-img { object-fit: contain; }
+.product-card--compact .product-img-backdrop { display: none; }
+.product-card--compact .product-img {
+  width: 100%;
+  height: 100%;
+}
 .product-card--compact .product-info { gap: 4px; padding: 9px 12px 12px; }
 .product-card--compact .product-name {
   font-family: var(--font-ui);
@@ -114,11 +118,7 @@
     grid-auto-columns: calc((100% - 70px) / 8);
   }
 
-  .home-trending .product-card--compact .product-media {
-    flex: 0 0 auto;
-    height: auto;
-    aspect-ratio: 1 / 1;
-  }
+  .home-trending .product-card--compact .product-media { flex: 0 0 auto; height: auto; }
 }
 
 @media (max-width: 1080px) {

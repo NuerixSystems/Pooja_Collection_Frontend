@@ -31,8 +31,8 @@
 .summary { background: var(--cream); }
 .cart-page-thumb { border: 1px solid rgba(184, 147, 90, .3); }
 
-/* Product detail image uses the same 4:5 frame as product cards */
-.product-page-media { aspect-ratio: 4 / 5; }
+/* Product detail media follows the source image's aspect ratio. */
+.product-page-media { aspect-ratio: auto; }
 
 /* Never scroll sideways */
 main { overflow-x: clip; }
