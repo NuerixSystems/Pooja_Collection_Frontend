@@ -12,7 +12,7 @@ export default function ShopFilters({ value, onChange, bounds, categories, idPre
 
   return (
     <div className="shop-filters">
-      {bounds && bounds.min < bounds.max && (
+      {bounds && bounds.max > 0 && (
         <details className="filter-group" open>
           <summary>Price</summary>
           <PriceRangeFilter

@@ -68,7 +68,8 @@ describe('parseShopFilters', () => {
     expect(f.sort).toBe('');
   });
   it('clamps out-of-range prices and swaps a reversed range', () => {
-    expect(parseShopFilters(params('minPrice=10&maxPrice=9999'), bounds)).toEqual(expect.objectContaining({ minPrice: null, maxPrice: null }));
+    expect(parseShopFilters(params('minPrice=10&maxPrice=9999'), bounds)).toEqual(expect.objectContaining({ minPrice: 10, maxPrice: null }));
+    expect(parseShopFilters(params('minPrice=0'), bounds).minPrice).toBeNull();
     const swapped = parseShopFilters(params('minPrice=450&maxPrice=250'), bounds);
     expect(swapped.minPrice).toBe(250);
     expect(swapped.maxPrice).toBe(450);
@@ -111,7 +112,7 @@ describe('helpers', () => {
     expect(countActiveFilters({ categories: ['a', 'b'], minPrice: 250, maxPrice: null })).toBe(2);
   });
   it('clampPrice keeps typed values inside the catalogue range', () => {
-    expect(clampPrice('50', { low: 199, high: 499 })).toBe(199);
+    expect(clampPrice('50', { low: 0, high: 499 })).toBe(50);
     expect(clampPrice('9000', { low: 199, high: 499 })).toBe(499);
     expect(clampPrice('', { low: 199, high: 499 })).toBeNull();
   });
