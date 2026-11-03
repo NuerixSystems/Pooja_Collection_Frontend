@@ -9,11 +9,14 @@ describe('home sections', () => {
     expect(within(main).getByRole('heading', { name: /more than just jewellery/i })).toBeInTheDocument();
     expect(within(main).getByRole('link', { name: /our story/i })).toHaveAttribute('href', '/about');
     expect(within(main).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(
-      expect.arrayContaining(['Elegant Designs', 'Quality Craftsmanship', 'Customer Support']),
+      expect.arrayContaining(['Elegant Designs', 'Quality Craftsmanship']),
     );
+    expect(main.querySelectorAll('.why-card')).toHaveLength(2);
+    const picks = within(main).getByRole('region', { name: /shop our favourites/i });
+    expect(within(picks).getAllByRole('button', { name: /add to cart/i })).toHaveLength(4);
     const names = [...main.querySelectorAll('.product-grid .product-name')].map((n) => n.textContent);
     expect(new Set(names).size).toBe(names.length);
-    expect(names.length).toBeGreaterThan(0);
+    expect(names).toHaveLength(7);
   });
 });
 

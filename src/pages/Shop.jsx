@@ -67,7 +67,7 @@ export default function Shop() {
   );
 
   return (
-    <div className="container">
+    <div className="container shop-page">
       <section className="section">
         <div className="section-head">
           <h1 className="section-title">{title}</h1>

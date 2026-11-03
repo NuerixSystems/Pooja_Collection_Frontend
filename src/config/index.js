@@ -17,8 +17,8 @@ export const BRAND = {
 // UPI payment shown on the Contact/order page.
 // 1) Put your own QR image at frontend/public/upi-qr.png   2) Set your UPI ID below.
 export const UPI = {
-  id: '9791872933@naviaxis',
-  payee: 'Mr VIGNESH V',
+  id: '9610844743-3@ibl',
+  payee: 'Mrs Pooja',
   qrImage: '/upi-qr.png',
   utrLength: 12,
 };

@@ -28,3 +28,10 @@
 /* No sideways scrolling anywhere on the page. */
 .shop-layout, .shop-results, .product-grid { max-width: 100%; }
 @media (max-width: 760px) { .section-head .sort { width: 100%; } .section-head .sort select { width: 100%; } }
+
+@media (max-width: 760px) {
+  .shop-page > .section { padding-top: 16px; }
+  .shop-page > .section > .section-head,
+  .shop-page > .section > .page-chips { display: none; }
+  .shop-page .shop-toolbar { margin-bottom: 12px; }
+}

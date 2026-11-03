@@ -1,32 +1,79 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
+
 import CategoryGrid from '../components/CategoryGrid';
 import ProductGrid from '../components/ProductGrid';
-import { OurStory, WhyChooseUs } from '../components/HomeSections';
+import {
+  FeaturedProducts,
+  OurStory,
+  WhyChooseUs,
+} from '../components/HomeSections';
+
 import { ChevronRightIcon } from '../components/Icons';
 import { getProducts } from '../services/catalog';
+
 import './Home.css';
 
 export default function Home() {
   const productsRef = useRef(null);
+
   const products = getProducts();
 
+  // 👇 DYNAMIC LOGIC START: Tag based filtering 👇
+
+  // 1. Favourites: Admin 'tag' la 'Best Seller' illa 'Favourite' illa 'Featured' nu set pannirundha, adhu inga varum.
+  let featuredProducts = products.filter(
+    (p) =>
+      p.tag === 'Best Seller' ||
+      p.tag === 'Favourite' ||
+      p.tag === 'Featured'
+  );
+
+  // 2. Trending: Admin 'tag' la 'Trending' illa 'New Arrival' nu set pannirundha, adhu inga varum.
+  let trendingProducts = products.filter(
+    (p) => p.tag === 'Trending' || p.tag === 'New Arrival'
+  );
+
+  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
+  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
+  if (featuredProducts.length === 0) {
+    featuredProducts = products.slice(0, 4);
+  }
+
+  if (trendingProducts.length === 0) {
+    // Already favourites-la irukkaradha thirumba trending-la kaatakoodadhu
+    const featuredIds = featuredProducts.map((p) => p.id);
+    trendingProducts = products.filter((p) => !featuredIds.includes(p.id));
+  }
+
+  // 👆 DYNAMIC LOGIC END 👆
+
   const scrollProducts = (direction) => {
-    if (productsRef.current) {
-      productsRef.current.scrollBy({
-        left: direction * productsRef.current.clientWidth * 0.75,
-        behavior: 'smooth',
-      });
-    }
+    if (!productsRef.current) return;
+
+    productsRef.current.scrollBy({
+      left: direction * productsRef.current.clientWidth * 0.75,
+      behavior: 'smooth',
+    });
   };
 
   return (
     <div className="container container--full">
-      <section id="categories" className="section section--categories home-categories" aria-labelledby="cat-title">
-        <h1 id="cat-title" className="visually-hidden">Shop by category</h1>
+
+      {/* Categories */}
+      <section
+        id="categories"
+        className="section section--categories home-categories"
+        aria-labelledby="cat-title"
+      >
+        <h1 id="cat-title" className="visually-hidden">
+          Shop by category
+        </h1>
+
         <CategoryGrid />
       </section>
 
+      {/* Divider */}
       <div className="home-divider" aria-hidden="true">
         <span className="home-divider-line" />
         <svg className="home-lotus" viewBox="0 0 32 24" fill="none">
@@ -36,30 +83,70 @@ export default function Home() {
         <span className="home-divider-line" />
       </div>
 
-      <section className="section section--trending home-trending" aria-labelledby="trend-title">
-        <div className="home-trending-head">
-          <div>
-            <h2 id="trend-title" className="section-title">Trending now</h2>
-            <p className="section-sub">Our most loved products, handpicked for you</p>
-          </div>
-          <Link to="/shop" className="text-link">View all <ChevronRightIcon size={18} /></Link>
-        </div>
+      {/* Trending Products */}
+      {trendingProducts.length > 0 && (
+        <section
+          className="section section--trending home-trending"
+          aria-labelledby="trend-title"
+        >
+          <div className="home-trending-head">
+            <div>
+              <h2 id="trend-title" className="section-title">
+                Trending now
+              </h2>
+              <p className="section-sub">
+                Our most loved products, handpicked for you
+              </p>
+            </div>
 
-        <div className="home-product-carousel">
-          <button type="button" className="home-carousel-arrow" aria-label="Previous products" onClick={() => scrollProducts(-1)}>
-            <ChevronRightIcon size={20} className="is-reversed" />
-          </button>
-          <div className="home-product-window" ref={productsRef}>
-            <ProductGrid products={products} variant="home" />
+            <Link to="/shop" className="text-link">
+              View all
+              <ChevronRightIcon size={18} />
+            </Link>
           </div>
-          <button type="button" className="home-carousel-arrow" aria-label="Next products" onClick={() => scrollProducts(1)}>
-            <ChevronRightIcon size={20} />
-          </button>
-        </div>
-      </section>
 
+          <div className="home-product-carousel">
+            <button
+              type="button"
+              className="home-carousel-arrow"
+              aria-label="Previous products"
+              onClick={() => scrollProducts(-1)}
+            >
+              <ChevronRightIcon size={20} className="is-reversed" />
+            </button>
+
+            <div className="home-product-window" ref={productsRef}>
+              <ProductGrid
+                products={trendingProducts}
+                variant="home"
+                compact
+                linkImageToProduct
+              />
+            </div>
+
+            <button
+              type="button"
+              className="home-carousel-arrow"
+              aria-label="Next products"
+              onClick={() => scrollProducts(1)}
+            >
+              <ChevronRightIcon size={20} />
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Reordered Sections */}
+      
+      {/* Shop our favourites */}
+      <FeaturedProducts products={featuredProducts} />
+
+      {/* More Than Just Jewellery */}
       <OurStory />
+
+      {/* Why Choose Pooja Collection? */}
       <WhyChooseUs />
+
     </div>
   );
 }

@@ -1,40 +1,62 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useUI } from '../context/UIContext';
 import { getAddresses, createAddress, deleteAddress, setDefaultAddress } from '../services/address';
+import { ApiError } from '../services/api';
 import { getSession } from '../services/auth';
+import { clearSession, subscribeSession } from '../services/session';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import './AddressBook.css';
 
 export default function AddressBook() {
   useDocumentTitle('Manage Addresses');
+  const { open } = useUI();
   const [addresses, setAddresses] = useState([]);
   const [form, setForm] = useState({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
   const [loading, setLoading] = useState(false);
-  
-  const session = getSession();
+  const [session, setSession] = useState(getSession);
+  const [error, setError] = useState('');
 
-  const loadAddresses = () => {
-    if (session) {
-      getAddresses()
-        .then((data) => setAddresses(data))
-        .catch(() => setAddresses([]));
+  useEffect(() => subscribeSession(() => setSession(getSession())), []);
+
+  const handleRequestError = (err) => {
+    if (err instanceof ApiError && err.status === 401) {
+      clearSession();
+      setError('Your login has expired. Please log in again to manage addresses.');
+      open('login');
+      return;
     }
+    setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
   };
 
   useEffect(() => {
-    loadAddresses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let active = true;
+    if (!session) {
+      setAddresses([]);
+      return () => { active = false; };
+    }
+
+    setError('');
+    getAddresses()
+      .then((data) => { if (active) setAddresses(data); })
+      .catch((err) => {
+        if (!active) return;
+        setAddresses([]);
+        handleRequestError(err);
+      });
+
+    return () => { active = false; };
+  }, [session]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       await createAddress(form);
       setForm({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
-      loadAddresses();
+      setAddresses(await getAddresses());
     } catch (err) {
-      alert('Failed to add address');
+      handleRequestError(err);
     } finally {
       setLoading(false);
     }
@@ -44,9 +66,9 @@ export default function AddressBook() {
     if (window.confirm('Delete this address?')) {
       try {
         await deleteAddress(id);
-        loadAddresses();
+        setAddresses(await getAddresses());
       } catch (err) {
-        alert('Failed to delete address');
+        handleRequestError(err);
       }
     }
   };
@@ -54,9 +76,9 @@ export default function AddressBook() {
   const handleSetDefault = async (id) => {
     try {
       await setDefaultAddress(id);
-      loadAddresses();
+      setAddresses(await getAddresses());
     } catch (err) {
-      alert('Failed to set default address');
+      handleRequestError(err);
     }
   };
 
@@ -69,7 +91,8 @@ export default function AddressBook() {
       <div className="container address-book-page">
         <h1 className="section-title mb-4">Manage Addresses</h1>
         <p>Please log in to manage your addresses.</p>
-        <Link to="/login" className="btn">Login</Link>
+        {error && <p role="alert">{error}</p>}
+        <button type="button" className="btn" onClick={() => open('login')}>Login</button>
       </div>
     );
   }
@@ -80,6 +103,7 @@ export default function AddressBook() {
 
       {/* Saved Addresses List */}
       <div className="address-list">
+        {error && <p className="field-error" role="alert">{error}</p>}
         {addresses.length === 0 && <p className="text-gray-500">No addresses saved yet.</p>}
         {addresses.map((addr) => (
           <div key={addr.id} className={`address-card ${addr.isDefault ? 'is-default' : ''}`}>

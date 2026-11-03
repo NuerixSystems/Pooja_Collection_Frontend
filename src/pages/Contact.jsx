@@ -11,6 +11,8 @@ import { ApiError } from '../services/api';
 import { placeOrderRemote } from '../services/orders';
 import { submitEnquiry } from '../services/enquiries';
 import { getProductBySlug } from '../services/catalog';
+import { getAddresses } from '../services/address'; // 👈 ADDED
+import { getSession } from '../services/auth'; // 👈 ADDED
 import { CHECKOUT_FIELDS, normalizeIndianMobile, validateCheckout } from '../utils/checkout';
 import { formatPrice } from '../utils/format';
 import './CartPage.css';
@@ -65,7 +67,6 @@ function InstagramIcon({ size = 28 }) {
   );
 }
 
-// --- Added Eye Icons for Password Toggle ---
 function EyeIcon({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -232,10 +233,9 @@ function ProductEnquiry({ product, designId, qty }) {
 export default function Contact() {
   const { lines, cartTotal, cartCount, maxQty, setQty, removeFromCart, clearCart } = useStore();
   const navigate = useNavigate();
-  const { open, checkoutAddress } = useUI(); // 👈 checkoutAddress import
+  const { open, checkoutAddress } = useUI();
   const [searchParams] = useSearchParams();
   
-  // 👇 FIXED: Initialize values with checkoutAddress directly
   const [values, setValues] = useState(() => {
     if (checkoutAddress) {
       return {
@@ -250,6 +250,30 @@ export default function Contact() {
     return {};
   });
 
+  // 👇 ADDED THIS USEEFFECT TO AUTO-FILL ADDRESS 👇
+  useEffect(() => {
+    const session = getSession();
+    if (session && !checkoutAddress) {
+      getAddresses()
+        .then((data) => {
+          const defaultAddr = data.find((a) => a.isDefault) || data[0];
+          if (defaultAddr) {
+            setValues((prev) => ({
+              ...prev,
+              name: defaultAddr.name || '',
+              phone: defaultAddr.phone || '',
+              pincode: defaultAddr.pincode || '',
+              address: defaultAddr.addressLine || '',
+              city: defaultAddr.city || '',
+              state: defaultAddr.state || '',
+            }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [checkoutAddress]);
+  // 👆 END OF ADDED USEEFFECT 👆
+
   const [message, setMessage] = useState('');
   const [payment, setPayment] = useState('upi');
   const [utr, setUtr] = useState('');
@@ -258,8 +282,6 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
-  
-  // Added state for password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
   
   const inputs = useRef({});
@@ -348,9 +370,7 @@ export default function Contact() {
                     {f.type === 'password' ? (
                       <div className="password-input-wrap">
                         <input
-                          ref={(el) => {
-                            inputs.current[f.name] = el;
-                          }}
+                          ref={(el) => { inputs.current[f.name] = el; }}
                           id={`f-${f.name}`}
                           name={f.name}
                           type={showPassword ? 'text' : 'password'}
@@ -372,9 +392,7 @@ export default function Contact() {
                       </div>
                     ) : (
                       <input
-                        ref={(el) => {
-                          inputs.current[f.name] = el;
-                        }}
+                        ref={(el) => { inputs.current[f.name] = el; }}
                         id={`f-${f.name}`}
                         name={f.name}
                         type={f.type || 'text'}

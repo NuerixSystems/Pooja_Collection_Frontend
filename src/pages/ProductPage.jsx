@@ -125,6 +125,16 @@ function sanitizeDescriptionHtml(input) {
   return doc.body.innerHTML;
 }
 
+
+function stockOf(product) {
+  const raw = product?.stock_quantity ?? product?.stockQuantity;
+  const quantity = Number(raw ?? 0);
+
+  return Number.isFinite(quantity)
+    ? Math.max(0, Math.floor(quantity))
+    : 0;
+}
+
 function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
   const { open, setCheckoutAddress } = useUI();
@@ -220,7 +230,11 @@ function ProductDetails({ product }) {
   }, [product.slug, product.image]);
 
   const category = getCategory(product.categorySlug);
-  const needsDesign = product.designs.length > 0;
+  const stock = stockOf(product);
+  const outOfStock = stock === 0;
+  const lowStock = stock > 0 && stock < 3;
+
+  const needsDesign = (product.designs || []).length > 0;
   const wished = isWishlisted(product.id);
   const atMax = isAtMax(product.id, needsDesign ? designId : null);
   const others = getOtherProducts(product);
@@ -270,23 +284,24 @@ function ProductDetails({ product }) {
     };
   }, [lightboxOpen, currentImageIndex, galleryImages]);
 
+  // 👇 Updated Add to Cart Logic 👇
   const add = () => {
+    if (outOfStock || atMax) return;
+
     const result = addToCart(product.id, designId);
     
-    // If design is required but not selected
     if (result.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
       return;
     }
 
-    // If user is not logged in
     if (result.reason === 'login-required') {
       open('login');
       return;
     }
 
-    // 👇 If successfully added, redirect to Cart Page
+    // If successfully added, redirect to Cart Page
     if (result.ok) {
       navigate('/cart');
     }
@@ -331,8 +346,20 @@ function ProductDetails({ product }) {
                 </span>
               </button>
 
-              {product.tag && (
+              {product.tag && !outOfStock && (
                 <span className="product-badge">{product.tag}</span>
+              )}
+
+              {outOfStock && (
+                <span className="product-page-stock-badge" role="status">
+                  OUT OF STOCK
+                </span>
+              )}
+
+              {lowStock && (
+                <span className="product-page-stock-badge product-page-stock-badge--low" role="status">
+                  Only {stock} left
+                </span>
               )}
             </div>
 
@@ -375,6 +402,17 @@ function ProductDetails({ product }) {
                 <s>{formatPrice(product.compareAtPrice)}</s>
               )}
             </p>
+
+            {lowStock && (
+              <p className="product-page-stock-note" role="status">
+                Only {stock} left in stock
+              </p>
+            )}
+            {outOfStock && (
+              <p className="product-page-stock-note product-page-stock-note--out" role="status">
+                This product is currently out of stock.
+              </p>
+            )}
 
             {/* 👇 Address Box (Updated Design) */}
             <div className="delivery-box">
@@ -469,11 +507,16 @@ function ProductDetails({ product }) {
             <div className="product-page-actions">
               <button
                 type="button"
-                className="btn product-page-add"
+                className={`btn product-page-add${outOfStock ? ' product-page-add--out-of-stock' : ''}`}
                 onClick={add}
-                disabled={atMax}
+                disabled={outOfStock || atMax}
+                aria-disabled={outOfStock || atMax}
               >
-                {atMax ? 'Maximum in cart' : 'Add to cart'}
+                {outOfStock
+                  ? 'Out of Stock'
+                  : atMax
+                    ? 'Maximum in cart'
+                    : 'Add to cart'}
               </button>
 
               <button
@@ -492,7 +535,7 @@ function ProductDetails({ product }) {
               </button>
             </div>
 
-            {atMax && (
+            {!outOfStock && atMax && (
               <p className="qty-note">
                 You can order up to {maxQty} of this item at a time.
               </p>
