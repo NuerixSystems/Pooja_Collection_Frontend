@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
 import RecommendedProducts from '../components/RecommendedProducts';
 import ReviewsSection from '../components/ReviewsSection';
 import SafeImage from '../components/SafeImage';
@@ -139,6 +139,7 @@ function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
   const { open, setCheckoutAddress } = useUI();
   const addToCart = useAddToCart();
+  const navigate = useNavigate(); // 👈 Added
 
   const [galleryImages, setGalleryImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(product.image || '');
@@ -283,13 +284,25 @@ function ProductDetails({ product }) {
     };
   }, [lightboxOpen, currentImageIndex, galleryImages]);
 
+  // 👇 Added navigate logic here
   const add = () => {
     if (outOfStock || atMax) return;
 
     const result = addToCart(product.id, designId);
+    
     if (result.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
+      return;
+    }
+
+    if (result.reason === 'login-required') {
+      open('login');
+      return;
+    }
+
+    if (result.ok) {
+      navigate('/cart');
     }
   };
 
@@ -400,7 +413,6 @@ function ProductDetails({ product }) {
               </p>
             )}
 
-            {/* 👇 Address Box (Updated Design) */}
             <div className="delivery-box">
               {sessionToken ? (
                 <div className="delivery-box-inner">
@@ -436,7 +448,6 @@ function ProductDetails({ product }) {
                 </p>
               )}
             </div>
-            {/* 👆 End of Address Box */}
 
             {description.trim() && (
               hasHtml ? (
@@ -622,7 +633,7 @@ function ProductDetails({ product }) {
         </div>
       )}
 
-      {/* 👇 Added Address Modal */}
+      {/* Added Address Modal */}
       {showAddressModal && (
         <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
           <div className="address-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -662,7 +673,6 @@ function ProductDetails({ product }) {
           </div>
         </div>
       )}
-      {/* 👆 End of Added Address Modal */}
 
       <ReviewsSection product={product} />
       <RecommendedProducts products={others} />

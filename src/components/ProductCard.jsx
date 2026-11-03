@@ -1,5 +1,4 @@
-
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
 
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
@@ -69,6 +68,7 @@ export default function ProductCard({
 
   const { open } = useUI();
   const addToCart = useAddToCart();
+  const navigate = useNavigate(); // 👈 Added
 
   const category = getCategory(product.categorySlug);
 
@@ -101,11 +101,20 @@ export default function ProductCard({
   };
 
 
-  // Prevent adding products when stock is zero.
+  // 👇 Added navigate logic here
   const handleAddToCart = () => {
     if (outOfStock || needsDesign || atMax) return;
 
-    addToCart(product.id);
+    const result = addToCart(product.id);
+    
+    if (result?.reason === 'login-required') {
+      open('login');
+      return;
+    }
+    
+    if (result?.ok) {
+      navigate('/cart');
+    }
   };
 
 
@@ -223,33 +232,32 @@ export default function ProductCard({
             </span>
           )}
 
-          {!compact && (
-            outOfStock ? (
-              <button
-                type="button"
-                className="btn btn--ghost product-add product-add--out-of-stock"
-                disabled
-                aria-disabled="true"
-              >
-                Out of Stock
-              </button>
-            ) : needsDesign ? (
-              <Link
-                to={to}
-                className="btn btn--ghost product-add"
-              >
-                Choose a design
-              </Link>
-            ) : (
-              <button
-                type="button"
-                className="btn btn--ghost product-add"
-                disabled={atMax}
-                onClick={handleAddToCart}
-              >
-                {atMax ? 'Maximum in cart' : 'Add to cart'}
-              </button>
-            )
+          {/* 👇 Removed !compact so button shows in Trending/Favourites too */}
+          {outOfStock ? (
+            <button
+              type="button"
+              className="btn btn--ghost product-add product-add--out-of-stock"
+              disabled
+              aria-disabled="true"
+            >
+              Out of Stock
+            </button>
+          ) : needsDesign ? (
+            <Link
+              to={to}
+              className="btn btn--ghost product-add"
+            >
+              Choose a design
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="btn btn--ghost product-add"
+              disabled={atMax}
+              onClick={handleAddToCart}
+            >
+              {atMax ? 'Maximum in cart' : 'Add to cart'}
+            </button>
           )}
 
         </div>
