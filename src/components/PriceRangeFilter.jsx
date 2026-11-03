@@ -3,10 +3,10 @@ import { formatPrice } from '../utils/format';
 import { clampPrice } from '../utils/shopFilters';
 
 // Dual-handle price slider (two native range inputs layered on one track, no extra dependency) plus typed
-// minimum / maximum boxes. `min` / `max` are the real catalogue limits. `value` is { min, max } where null means
-// "no limit". While a handle is being dragged only local state changes; the parent hears about it on release.
+// minimum / maximum boxes. The slider starts at zero and ends at the catalogue maximum. `value` is { min, max }
+// where null means "no limit". While a handle is being dragged only local state changes; the parent hears about it on release.
 export default function PriceRangeFilter({ bounds, value, onChange }) {
-  const lo = value.min ?? bounds.min;
+  const lo = value.min ?? 0;
   const hi = value.max ?? bounds.max;
   const [draft, setDraft] = useState({ lo, hi });
   const [typed, setTyped] = useState({ lo: String(lo), hi: String(hi) });
@@ -19,7 +19,7 @@ export default function PriceRangeFilter({ bounds, value, onChange }) {
   }, [lo, hi]);
 
   const commit = (nextLo, nextHi) => {
-    onChange({ min: nextLo <= bounds.min ? null : nextLo, max: nextHi >= bounds.max ? null : nextHi });
+    onChange({ min: nextLo <= 0 ? null : nextLo, max: nextHi >= bounds.max ? null : nextHi });
   };
 
   const slide = (which) => (e) => {
@@ -36,21 +36,33 @@ export default function PriceRangeFilter({ bounds, value, onChange }) {
   };
 
   const commitTyped = (which) => {
-    const parsed = clampPrice(typed[which], { low: bounds.min, high: bounds.max });
-    const base = which === 'lo' ? bounds.min : bounds.max;
+    const parsed = clampPrice(typed[which], { low: 0, high: bounds.max });
+    const base = which === 'lo' ? 0 : bounds.max;
     const n = parsed ?? base;
     const next = which === 'lo' ? { lo: Math.min(n, draft.hi), hi: draft.hi } : { lo: draft.lo, hi: Math.max(n, draft.lo) };
     setDraft(next);
     setTyped({ lo: String(next.lo), hi: String(next.hi) });
     commit(next.lo, next.hi);
   };
+  const changeTyped = (which) => (e) => {
+    const raw = e.target.value;
+    setTyped((current) => ({ ...current, [which]: raw }));
+    const parsed = clampPrice(raw, { low: 0, high: bounds.max });
+    if (parsed === null) return;
+    if ((which === 'lo' && parsed > draft.hi) || (which === 'hi' && parsed < draft.lo)) return;
+
+    const next = which === 'lo' ? { lo: parsed, hi: draft.hi } : { lo: draft.lo, hi: parsed };
+    setDraft(next);
+    setTyped({ lo: String(next.lo), hi: String(next.hi) });
+    commit(next.lo, next.hi);
+  };
   const onTypedKey = (which) => (e) => { if (e.key === 'Enter') { e.preventDefault(); commitTyped(which); } };
 
-  const span = bounds.max - bounds.min || 1;
-  const pct = (n) => ((n - bounds.min) / span) * 100;
+  const span = bounds.max || 1;
+  const pct = (n) => (n / span) * 100;
   // When both handles sit at the far end, the minimum handle must be on top or it could never be dragged back.
-  const minOnTop = draft.lo > bounds.min + span / 2;
-  const sliderProps = { type: 'range', min: bounds.min, max: bounds.max, step: 1, onPointerDown: () => { dragging.current = true; }, onPointerUp: release, onPointerCancel: release, onBlur: release };
+  const minOnTop = draft.lo > span / 2;
+  const sliderProps = { type: 'range', min: 0, max: bounds.max, step: 1, onPointerDown: () => { dragging.current = true; }, onPointerUp: release, onPointerCancel: release, onBlur: release };
 
   return (
     <div className="price-filter">
@@ -70,8 +82,8 @@ export default function PriceRangeFilter({ bounds, value, onChange }) {
           <span className="price-input__box">
             <span aria-hidden="true">₹</span>
             <input
-              type="number" inputMode="numeric" min={bounds.min} max={bounds.max} aria-label="Minimum price"
-              value={typed.lo} onChange={(e) => setTyped((t) => ({ ...t, lo: e.target.value }))}
+              type="number" inputMode="numeric" min={0} max={bounds.max} aria-label="Minimum price"
+              value={typed.lo} onChange={changeTyped('lo')}
               onBlur={() => commitTyped('lo')} onKeyDown={onTypedKey('lo')}
             />
           </span>
@@ -82,8 +94,8 @@ export default function PriceRangeFilter({ bounds, value, onChange }) {
           <span className="price-input__box">
             <span aria-hidden="true">₹</span>
             <input
-              type="number" inputMode="numeric" min={bounds.min} max={bounds.max} aria-label="Maximum price"
-              value={typed.hi} onChange={(e) => setTyped((t) => ({ ...t, hi: e.target.value }))}
+              type="number" inputMode="numeric" min={0} max={bounds.max} aria-label="Maximum price"
+              value={typed.hi} onChange={changeTyped('hi')}
               onBlur={() => commitTyped('hi')} onKeyDown={onTypedKey('hi')}
             />
           </span>

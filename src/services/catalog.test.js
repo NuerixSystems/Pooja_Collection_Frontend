@@ -4,15 +4,46 @@ vi.mock('../config', async (orig) => ({ ...(await orig()), CRM: { tenantId: '8',
 
 import { EXCLUDED_CATEGORY_SLUGS } from '../config';
 import { API_CATALOG } from '../test/fixtures';
-import { getCategories, getCategory, getOtherProducts, getProductBySlug, getProductGallery, getProducts, getRelatedProducts, searchSuggestions, setCatalog } from './catalog';
+import { getCategories, getCategory, getOtherProducts, getProductBySlug, getProductGallery, getProducts, getRelatedProducts, imageUrl, searchSuggestions, setCatalog } from './catalog';
 
 // Wording that must never reach a customer: supplier/platform names, internal stock notes,
 // and brand/licensing claims we can't verify.
 const BLOCKED = ['meesho', 'osweet', 'hello kitty', 'kitty', 'stock alert'];
 
 describe('catalogue shape (as served by the backend)', () => {
-  it('uses the deployed watch image for the Anti Tarnish Watch and its gallery', async () => {
-    const image = 'http://api.test/media/pooja/products/watches.webp';
+  it('does not render image URLs from the hostname that currently fails DNS', () => {
+    expect(imageUrl(
+      'https://images.nuerix.in/images/poojascollection/products/8/155/image.jpg',
+    )).toBe('');
+    expect(imageUrl(
+      '//images.nuerix.in/images/poojascollection/products/8/155/image.jpg',
+    )).toBe('');
+  });
+
+  it('preserves the verified Hostinger image URL', () => {
+    const url = 'https://image.nuerix.in/images/poojascollection/products/8/155/b51a1bae42174dc4968197b61199e692.jpg';
+    expect(imageUrl(url)).toBe(url);
+  });
+
+  it('omits unavailable gallery URLs so the product image fallback is rendered', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        images: [{
+          url: 'https://images.nuerix.in/images/poojascollection/products/8/155/image.jpg',
+        }],
+      }),
+    }));
+
+    try {
+      await expect(getProductGallery('kani-bracelet')).resolves.toEqual([]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('preserves CRM image URLs for product images and galleries', async () => {
+    const image = 'https://crm-dkc2.onrender.com/api/product-image/1';
     setCatalog({
       categories: [{ slug: 'watches', name: 'Watches', image: '' }],
       products: [{

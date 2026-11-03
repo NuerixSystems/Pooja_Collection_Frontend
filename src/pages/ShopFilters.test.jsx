@@ -1,6 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getPriceBounds, setCatalog } from '../services/catalog';
+import { API_CATALOG } from '../test/fixtures';
 import { renderApp, savedCart } from '../test/utils';
 
 const cards = () => [...document.querySelectorAll('article.product-card')];
@@ -20,6 +22,18 @@ describe('shop filters (desktop)', () => {
     expect(within(side).getAllByRole('checkbox')).toHaveLength(7); // categories only
     expect(document.body.textContent).not.toMatch(/in stock|out of stock|availability/i);
     expect(count()).toBe('7 products');
+  });
+
+  it('shows the zero-based price slider when all products have the same price', () => {
+    setCatalog({
+      ...API_CATALOG,
+      products: API_CATALOG.products.slice(0, 2).map((product) => ({ ...product, price: 500 })),
+    });
+    renderApp('/shop');
+    expect(getPriceBounds()).toEqual({ min: 500, max: 500 });
+    expect(within(sidebar()).getByLabelText('Minimum price slider')).toHaveAttribute('min', '0');
+    expect(within(sidebar()).getByLabelText('Maximum price slider')).toHaveAttribute('max', '2000');
+    expect(within(sidebar()).getByLabelText('Maximum price')).toHaveAttribute('max', '2000');
   });
 
   it('loads categories dynamically with product counts', () => {
@@ -49,7 +63,7 @@ describe('shop filters (desktop)', () => {
     await user.tab();
     expect(cards()).toHaveLength(3);
     expect(cardPrices().every((p) => /₹(399|499)/.test(p))).toBe(true);
-    expect(document.querySelector('.price-filter__selected').textContent).toMatch(/₹300.*₹499/);
+    expect(document.querySelector('.price-filter__selected').textContent).toMatch(/₹300.*₹2,000/);
 
     const max = within(sidebar()).getByLabelText('Maximum price');
     await user.clear(max);
@@ -60,6 +74,8 @@ describe('shop filters (desktop)', () => {
 
   it('filters with the slider handles and keeps the typed boxes in sync', () => {
     renderApp('/shop');
+    expect(within(sidebar()).getByLabelText('Minimum price slider')).toHaveAttribute('min', '0');
+    expect(within(sidebar()).getByLabelText('Minimum price')).toHaveValue(0);
     fireEvent.change(within(sidebar()).getByLabelText('Minimum price slider'), { target: { value: '300' } });
     expect(cards()).toHaveLength(3);
     expect(within(sidebar()).getByLabelText('Minimum price')).toHaveValue(300);
@@ -68,16 +84,30 @@ describe('shop filters (desktop)', () => {
     expect(within(sidebar()).getByLabelText('Maximum price')).toHaveValue(399);
   });
 
-  it('never lets the minimum pass the maximum, and clamps typed values to the catalogue range', async () => {
+  it('keeps slider handles in sync while changing the minimum and maximum inputs', async () => {
+    const user = userEvent.setup();
+    renderApp('/shop');
+    const min = within(sidebar()).getByLabelText('Minimum price');
+    await user.clear(min);
+    await user.type(min, '250');
+    expect(within(sidebar()).getByLabelText('Minimum price slider')).toHaveValue('250');
+
+    const max = within(sidebar()).getByLabelText('Maximum price');
+    await user.clear(max);
+    await user.type(max, '350');
+    expect(within(sidebar()).getByLabelText('Maximum price slider')).toHaveValue('350');
+  });
+
+  it('never lets the minimum pass the maximum, and clamps typed values to the 0-to-catalogue range', async () => {
     const user = userEvent.setup();
     renderApp('/shop');
     const max = within(sidebar()).getByLabelText('Maximum price');
     await user.clear(max);
-    await user.type(max, '50{Enter}'); // below the cheapest product -> clamped to the catalogue minimum
-    expect(max).toHaveValue(199);
-    expect(cards()).toHaveLength(2);
+    await user.type(max, '50{Enter}');
+    expect(max).toHaveValue(50);
+    expect(cards()).toHaveLength(0);
     fireEvent.change(within(sidebar()).getByLabelText('Minimum price slider'), { target: { value: '450' } });
-    expect(within(sidebar()).getByLabelText('Minimum price')).toHaveValue(199);
+    expect(within(sidebar()).getByLabelText('Minimum price')).toHaveValue(50);
   });
 
   it('combines category, price and sorting', async () => {
