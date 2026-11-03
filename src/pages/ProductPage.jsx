@@ -290,18 +290,19 @@ function ProductDetails({ product }) {
 
     const result = addToCart(product.id, designId);
     
-    if (result.reason === 'design-required') {
+    if (result?.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
       return;
     }
 
-    if (result.reason === 'login-required') {
+    if (result?.reason === 'login-required') {
       open('login');
       return;
     }
 
-    if (result.ok) {
+    // If successfully added, redirect to Cart Page
+    if (result?.ok) {
       navigate('/cart');
     }
   };

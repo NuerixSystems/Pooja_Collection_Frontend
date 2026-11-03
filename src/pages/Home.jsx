@@ -1,4 +1,3 @@
-
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -20,8 +19,34 @@ export default function Home() {
 
   const products = getProducts();
 
-  const featuredProducts = products.slice(0, 4);
-  const trendingProducts = products.slice(4);
+  // 👇 DYNAMIC LOGIC START: Tag based filtering 👇
+
+  // 1. Favourites: Admin 'tag' la 'Best Seller' illa 'Favourite' illa 'Featured' nu set pannirundha, adhu inga varum.
+  let featuredProducts = products.filter(
+    (p) =>
+      p.tag === 'Best Seller' ||
+      p.tag === 'Favourite' ||
+      p.tag === 'Featured'
+  );
+
+  // 2. Trending: Admin 'tag' la 'Trending' illa 'New Arrival' nu set pannirundha, adhu inga varum.
+  let trendingProducts = products.filter(
+    (p) => p.tag === 'Trending' || p.tag === 'New Arrival'
+  );
+
+  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
+  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
+  if (featuredProducts.length === 0) {
+    featuredProducts = products.slice(0, 4);
+  }
+
+  if (trendingProducts.length === 0) {
+    // Already favourites-la irukkaradha thirumba trending-la kaatakoodadhu
+    const featuredIds = featuredProducts.map((p) => p.id);
+    trendingProducts = products.filter((p) => !featuredIds.includes(p.id));
+  }
+
+  // 👆 DYNAMIC LOGIC END 👆
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
@@ -51,16 +76,10 @@ export default function Home() {
       {/* Divider */}
       <div className="home-divider" aria-hidden="true">
         <span className="home-divider-line" />
-
-        <svg
-          className="home-lotus"
-          viewBox="0 0 32 24"
-          fill="none"
-        >
+        <svg className="home-lotus" viewBox="0 0 32 24" fill="none">
           <path d="M16 21C9 21 5 17 5 12c4 0 7 2 9 6-1-6 0-10 2-14 2 4 3 8 2 14 2-4 5-6 9-6 0 5-4 9-11 9Z" />
           <path d="M3 18c4 0 7 1 10 3m16-3c-4 0-7 1-10 3" />
         </svg>
-
         <span className="home-divider-line" />
       </div>
 
@@ -75,7 +94,6 @@ export default function Home() {
               <h2 id="trend-title" className="section-title">
                 Trending now
               </h2>
-
               <p className="section-sub">
                 Our most loved products, handpicked for you
               </p>
@@ -88,23 +106,16 @@ export default function Home() {
           </div>
 
           <div className="home-product-carousel">
-
             <button
               type="button"
               className="home-carousel-arrow"
               aria-label="Previous products"
               onClick={() => scrollProducts(-1)}
             >
-              <ChevronRightIcon
-                size={20}
-                className="is-reversed"
-              />
+              <ChevronRightIcon size={20} className="is-reversed" />
             </button>
 
-            <div
-              className="home-product-window"
-              ref={productsRef}
-            >
+            <div className="home-product-window" ref={productsRef}>
               <ProductGrid
                 products={trendingProducts}
                 variant="home"
@@ -121,16 +132,20 @@ export default function Home() {
             >
               <ChevronRightIcon size={20} />
             </button>
-
           </div>
         </section>
       )}
 
+      {/* Reordered Sections */}
+      
+      {/* Shop our favourites */}
+      <FeaturedProducts products={featuredProducts} />
+
+      {/* More Than Just Jewellery */}
       <OurStory />
 
+      {/* Why Choose Pooja Collection? */}
       <WhyChooseUs />
-
-      <FeaturedProducts products={featuredProducts} />
 
     </div>
   );
