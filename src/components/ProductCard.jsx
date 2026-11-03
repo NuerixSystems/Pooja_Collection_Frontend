@@ -1,5 +1,4 @@
-
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
@@ -69,6 +68,7 @@ export default function ProductCard({
 
   const { open } = useUI();
   const addToCart = useAddToCart();
+  const navigate = useNavigate();
 
   const category = getCategory(product.categorySlug);
 
@@ -105,7 +105,12 @@ export default function ProductCard({
   const handleAddToCart = () => {
     if (outOfStock || needsDesign || atMax) return;
 
-    addToCart(product.id);
+    const result = addToCart(product.id);
+    
+    // 👇 Redirect to Cart Page if successfully added
+    if (result?.ok) {
+      navigate('/cart');
+    }
   };
 
 
@@ -118,8 +123,17 @@ export default function ProductCard({
       ].filter(Boolean).join(' ')}
       data-stock={stock}
     >
-
       <div className="product-media">
+        
+        {/* Blurred backdrop fill */}
+        <SafeImage
+          src={product.image}
+          fallbackSrc={category?.image}
+          alt=""
+          aria-hidden="true"
+          label={product.name}
+          className="product-img-backdrop"
+        />
 
         {linkImageToProduct ? (
           <Link
@@ -150,7 +164,6 @@ export default function ProductCard({
             {product.tag}
           </span>
         )}
-
 
         {/* Wishlist stays clickable for every stock level */}
         <button
@@ -223,33 +236,32 @@ export default function ProductCard({
             </span>
           )}
 
-          {!compact && (
-            outOfStock ? (
-              <button
-                type="button"
-                className="btn btn--ghost product-add product-add--out-of-stock"
-                disabled
-                aria-disabled="true"
-              >
-                Out of Stock
-              </button>
-            ) : needsDesign ? (
-              <Link
-                to={to}
-                className="btn btn--ghost product-add"
-              >
-                Choose a design
-              </Link>
-            ) : (
-              <button
-                type="button"
-                className="btn btn--ghost product-add"
-                disabled={atMax}
-                onClick={handleAddToCart}
-              >
-                {atMax ? 'Maximum in cart' : 'Add to cart'}
-              </button>
-            )
+          {/* 👇 Ippo ellaa cards-layum (compact aanaalum) Add to Cart button varum */}
+          {outOfStock ? (
+            <button
+              type="button"
+              className="btn btn--ghost product-add product-add--out-of-stock"
+              disabled
+              aria-disabled="true"
+            >
+              Out of Stock
+            </button>
+          ) : needsDesign ? (
+            <Link
+              to={to}
+              className="btn btn--ghost product-add"
+            >
+              Choose a design
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="btn btn--ghost product-add"
+              disabled={atMax}
+              onClick={handleAddToCart}
+            >
+              {atMax ? 'Maximum in cart' : 'Add to cart'}
+            </button>
           )}
 
         </div>

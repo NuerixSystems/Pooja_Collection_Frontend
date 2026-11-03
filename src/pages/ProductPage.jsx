@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom'; // 👈 useNavigate added
 import RecommendedProducts from '../components/RecommendedProducts';
 import ReviewsSection from '../components/ReviewsSection';
 import SafeImage from '../components/SafeImage';
@@ -139,6 +139,7 @@ function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
   const { open, setCheckoutAddress } = useUI();
   const addToCart = useAddToCart();
+  const navigate = useNavigate(); // 👈 Added navigation hook
 
   const [galleryImages, setGalleryImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(product.image || '');
@@ -283,13 +284,26 @@ function ProductDetails({ product }) {
     };
   }, [lightboxOpen, currentImageIndex, galleryImages]);
 
+  // 👇 Updated Add to Cart Logic 👇
   const add = () => {
     if (outOfStock || atMax) return;
 
     const result = addToCart(product.id, designId);
+    
     if (result.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
+      return;
+    }
+
+    if (result.reason === 'login-required') {
+      open('login');
+      return;
+    }
+
+    // If successfully added, redirect to Cart Page
+    if (result.ok) {
+      navigate('/cart');
     }
   };
 
