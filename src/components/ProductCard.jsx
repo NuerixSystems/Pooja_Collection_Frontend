@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
+
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useStore } from '../context/StoreContext';
 import { useUI } from '../context/UIContext';
@@ -68,7 +69,7 @@ export default function ProductCard({
 
   const { open } = useUI();
   const addToCart = useAddToCart();
-  const navigate = useNavigate(); // 👈 Added
+  const navigate = useNavigate();
 
   const category = getCategory(product.categorySlug);
 
@@ -101,17 +102,19 @@ export default function ProductCard({
   };
 
 
-  // 👇 Added navigate logic here
+  // Add to cart with login validation and cart redirection.
   const handleAddToCart = () => {
     if (outOfStock || needsDesign || atMax) return;
 
     const result = addToCart(product.id);
-    
+
+    // Ask the user to log in if authentication is required.
     if (result?.reason === 'login-required') {
       open('login');
       return;
     }
-    
+
+    // Redirect only after successful addition.
     if (result?.ok) {
       navigate('/cart');
     }
@@ -127,8 +130,17 @@ export default function ProductCard({
       ].filter(Boolean).join(' ')}
       data-stock={stock}
     >
-
       <div className="product-media">
+
+        {/* Blurred backdrop fill */}
+        <SafeImage
+          src={product.image}
+          fallbackSrc={category?.image}
+          alt=""
+          aria-hidden="true"
+          label={product.name}
+          className="product-img-backdrop"
+        />
 
         {linkImageToProduct ? (
           <Link
@@ -159,7 +171,6 @@ export default function ProductCard({
             {product.tag}
           </span>
         )}
-
 
         {/* Wishlist stays clickable for every stock level */}
         <button
@@ -232,7 +243,7 @@ export default function ProductCard({
             </span>
           )}
 
-          {/* 👇 Removed !compact so button shows in Trending/Favourites too */}
+          {/* Add to Cart button appears in normal and compact cards */}
           {outOfStock ? (
             <button
               type="button"

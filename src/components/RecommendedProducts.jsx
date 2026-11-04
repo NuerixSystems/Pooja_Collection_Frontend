@@ -15,6 +15,14 @@ export default function RecommendedProducts({ products }) {
           {products.map((p) => (
             <article className="reco-card" key={p.id}>
               <div className="reco-media">
+                <SafeImage
+                  src={p.image}
+                  fallbackSrc={getCategory(p.categorySlug)?.image}
+                  alt=""
+                  aria-hidden="true"
+                  label={p.name}
+                  className="reco-img-backdrop"
+                />
                 <SafeImage 
                   src={p.image} 
                   fallbackSrc={getCategory(p.categorySlug)?.image} 
