@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Pencil, Trash2 } from 'lucide-react'; // 👈 Icons imported
 import { useUI } from '../context/UIContext';
 import { getAddresses, createAddress, deleteAddress, setDefaultAddress } from '../services/address';
 import { ApiError } from '../services/api';
@@ -11,10 +12,14 @@ export default function AddressBook() {
   useDocumentTitle('Manage Addresses');
   const { open } = useUI();
   const [addresses, setAddresses] = useState([]);
-  const [form, setForm] = useState({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
+  
+  const emptyForm = { name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' };
+  const [form, setForm] = useState(emptyForm);
+  
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState(getSession);
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => subscribeSession(() => setSession(getSession())), []);
 
@@ -47,13 +52,35 @@ export default function AddressBook() {
     return () => { active = false; };
   }, [session]);
 
+  const handleEditClick = (addr) => {
+    setEditingId(addr.id);
+    setForm({
+      name: addr.name,
+      phone: addr.phone,
+      pincode: addr.pincode,
+      addressLine: addr.addressLine,
+      city: addr.city,
+      state: addr.state
+    });
+    document.querySelector('.add-address-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      if (editingId) {
+        await deleteAddress(editingId);
+      }
       await createAddress(form);
-      setForm({ name: '', phone: '', pincode: '', addressLine: '', city: '', state: '' });
+      setForm(emptyForm);
+      setEditingId(null);
       setAddresses(await getAddresses());
     } catch (err) {
       handleRequestError(err);
@@ -66,6 +93,7 @@ export default function AddressBook() {
     if (window.confirm('Delete this address?')) {
       try {
         await deleteAddress(id);
+        if (editingId === id) handleCancelEdit();
         setAddresses(await getAddresses());
       } catch (err) {
         handleRequestError(err);
@@ -101,7 +129,6 @@ export default function AddressBook() {
     <div className="container address-book-page">
       <h1 className="section-title mb-4">Manage Addresses</h1>
 
-      {/* Saved Addresses List */}
       <div className="address-list">
         {error && <p className="field-error" role="alert">{error}</p>}
         {addresses.length === 0 && <p className="text-gray-500">No addresses saved yet.</p>}
@@ -116,23 +143,33 @@ export default function AddressBook() {
               </p>
               <p className="address-phone">Phone: {addr.phone}</p>
             </div>
+            
             <div className="address-actions">
+              {/* 👇 Icon Buttons (Edit & Delete) */}
+              <div className="icon-buttons">
+                <button onClick={() => handleEditClick(addr)} className="icon-btn btn-edit" title="Edit">
+                  <Pencil size={16} />
+                </button>
+                <button onClick={() => handleDelete(addr.id)} className="icon-btn btn-delete" title="Delete">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              
+              {/* Set Default Button Below */}
               {!addr.isDefault && (
-                <button onClick={() => handleSetDefault(addr.id)} className="btn btn--ghost btn-sm">
+                <button onClick={() => handleSetDefault(addr.id)} className="btn-text-default">
                   Set as Default
                 </button>
               )}
-              <button onClick={() => handleDelete(addr.id)} className="btn btn--danger btn-sm">
-                Delete
-              </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add New Address Form */}
       <div className="add-address-section">
-        <h2 className="section-title-sm mb-3">Add New Address</h2>
+        <h2 className="section-title-sm mb-3">
+          {editingId ? 'Edit Address' : 'Add New Address'}
+        </h2>
         <form onSubmit={handleSubmit} className="address-form">
           <div className="field-grid">
             <div className="field">
@@ -160,11 +197,19 @@ export default function AddressBook() {
               <input required name="pincode" value={form.pincode} onChange={handleChange} className="input" placeholder="6-digit pincode" />
             </div>
           </div>
-          <button disabled={loading} className="btn btn--primary mt-4">
-            {loading ? 'Saving...' : 'Save Address'}
-          </button>
+          
+          <div className="form-actions">
+            <button disabled={loading} className="btn btn--primary">
+              {loading ? 'Saving...' : editingId ? 'Update Address' : 'Save Address'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={handleCancelEdit} className="btn btn--ghost" disabled={loading}>
+                Cancel Edit
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>
   );
-}
+} 
