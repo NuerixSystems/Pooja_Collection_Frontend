@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import RecommendedProducts from '../components/RecommendedProducts';
 import ReviewsSection from '../components/ReviewsSection';
 import SafeImage from '../components/SafeImage';
@@ -139,7 +139,7 @@ function ProductDetails({ product }) {
   const { toggleWishlist, isWishlisted, isAtMax, maxQty } = useStore();
   const { open, setCheckoutAddress } = useUI();
   const addToCart = useAddToCart();
-  const navigate = useNavigate(); // 👈 Added
+  const navigate = useNavigate();
 
   const [galleryImages, setGalleryImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(product.image || '');
@@ -284,7 +284,6 @@ function ProductDetails({ product }) {
     };
   }, [lightboxOpen, currentImageIndex, galleryImages]);
 
-  // 👇 Added navigate logic here
   const add = () => {
     if (outOfStock || atMax) return;
 
@@ -445,7 +444,15 @@ function ProductDetails({ product }) {
                 </div>
               ) : (
                 <p className="delivery-text">
-                  <Link to="/login" className="delivery-change">Login</Link> to see delivery options
+                  <button
+                    type="button"
+                    onClick={() => open('login')}
+                    className="delivery-change"
+                    style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', cursor: 'pointer', font: 'inherit', color: 'var(--burgundy)' }}
+                  >
+                    Login
+                  </button>{' '}
+                  to see delivery options
                 </p>
               )}
             </div>
@@ -542,7 +549,6 @@ function ProductDetails({ product }) {
         </div>
       </section>
 
-      {/* Full-screen product slideshow */}
       {lightboxOpen && galleryImages.length > 0 && (
         <div
           className="product-lightbox"
@@ -634,7 +640,7 @@ function ProductDetails({ product }) {
         </div>
       )}
 
-      {/* Added Address Modal */}
+      {/* Added Address Modal with Add New Address Button */}
       {showAddressModal && (
         <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
           <div className="address-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -642,7 +648,6 @@ function ProductDetails({ product }) {
             {addresses.length === 0 ? (
               <div className="address-modal-empty">
                 <p>No addresses saved.</p>
-                <Link to="/account/addresses" className="btn btn--ghost">Add New Address</Link>
               </div>
             ) : (
               <ul className="address-modal-list">
@@ -664,6 +669,16 @@ function ProductDetails({ product }) {
                 ))}
               </ul>
             )}
+            
+            {/* New Add Address Button added here */}
+            <Link 
+              to="/account/addresses" 
+              className="btn btn--ghost" 
+              style={{ width: '100%', marginBottom: '10px', display: 'flex', justifyContent: 'center' }}
+            >
+              + Add New Address
+            </Link>
+
             <button
               type="button"
               className="btn btn--ghost address-modal-close"
