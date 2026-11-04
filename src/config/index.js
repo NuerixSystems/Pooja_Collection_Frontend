@@ -32,6 +32,8 @@ export const CRM = {
 
 };
 
+export const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+
 // Categories that must never appear anywhere in the storefront,
 // regardless of what the data source (mock or CRM) returns.
 export const EXCLUDED_CATEGORY_SLUGS = ['dresses'];
