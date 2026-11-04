@@ -198,6 +198,7 @@
   font-size: .9rem; 
 }
 
+/* Base button style */
 .product-add { 
   position: relative; 
   z-index: 2; 
@@ -242,19 +243,20 @@
   }
 }
 
-@media (max-width: 700px) {
+/* 👇 Ithu dhaan mukkiyamana fix: 768px-la 2 columns strict-a varum 👇 */
+@media (max-width: 768px) {
   .product-grid,
   .product-grid--shop {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px 10px;
   }
 
   .product-info {
-    padding: 10px 10px 12px;
+    padding: 10px 8px 12px;
   }
 
   .product-name {
-    font-size: .95rem;
+    font-size: .9rem;
   }
 
   .product-grid--home {
@@ -323,19 +325,16 @@
    STOCK DISPLAY (Overrides)
 ========================================= */
 
-/* Never blur or dim the product image or details */
 .product-card--out-of-stock .product-img,
 .product-card--out-of-stock .product-info {
   filter: none !important;
   opacity: 1 !important;
 }
 
-/* Keep product image at normal appearance */
 .product-card--out-of-stock .product-media {
   opacity: 1;
 }
 
-/* Out of stock label */
 .stock-badge--out {
   position: absolute;
   top: 12px;
@@ -353,7 +352,6 @@
   border-radius: 4px;
 }
 
-/* Low stock label */
 .stock-badge:not(.stock-badge--out) {
   position: static;
   width: fit-content;
@@ -366,7 +364,6 @@
   font-weight: 700;
 }
 
-/* Wishlist always stays visible and clickable */
 .product-card .wish-btn {
   position: absolute;
   top: 12px;
@@ -375,37 +372,35 @@
   pointer-events: auto;
 }
 
-/* Disable navigation overlay for out-of-stock cards */
 .product-card--out-of-stock .product-link::after {
   display: none;
 }
 
-/* Keep product name readable */
 .product-card--out-of-stock .product-link--disabled {
   color: inherit;
   cursor: default;
   pointer-events: none;
 }
 
-/* Add to Cart and Out of Stock use identical dimensions */
+/* 👇 Button Fix: min-width remove panni 100% width kuduthuruken 👇 */
 .product-card .product-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-width: 125px;
+  width: 100%;
+  min-width: 0; /* Ithu dhaan antha periya prachanaia fix pannum */
   min-height: 40px;
-  padding: 10px 16px;
+  padding: 8px 10px;
   font-size: 13px;
   line-height: 18px;
-  white-space: nowrap;
 }
 
-/* Out of Stock has the same dimensions, but is disabled */
 .product-card .product-add--out-of-stock {
-  min-width: 125px;
+  width: 100%;
+  min-width: 0;
   min-height: 40px;
-  padding: 10px 16px;
+  padding: 8px 10px;
   opacity: 1;
   background: #e5e5e5;
   color: #555;
@@ -413,8 +408,15 @@
   cursor: not-allowed;
 }
 
-/* Keep wishlist active even when out of stock */
 .product-card--out-of-stock .wish-btn {
   opacity: 1;
   cursor: pointer;
+}
+
+/* 👇 Mobile-la button text cut aagama irukka konjam font size kurachiruken 👇 */
+@media (max-width: 768px) {
+  .product-card .product-add {
+    font-size: 12px;
+    padding: 8px 5px; /* Padding adjust panniruken */
+  }
 }
