@@ -3,12 +3,28 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '../test/utils';
 import { getSession } from '../services/session';
+import { loadGoogleIdentityServices } from '../services/googleIdentity';
 
-vi.mock('../config', async (orig) => ({ ...(await orig()), CRM: { tenantId: '8', apiUrl: 'http://api.test' } }));
+vi.mock('../config', async (orig) => ({ ...(await orig()), CRM: { tenantId: '8', apiUrl: 'http://api.test' }, GOOGLE_CLIENT_ID: 'test-google-client-id' }));
+vi.mock('../services/googleIdentity', () => ({ loadGoogleIdentityServices: vi.fn() }));
 
 const json = (body, status = 200) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(body) });
-const sentBody = () => JSON.parse(fetch.mock.calls.at(-1)[1].body);
+const authCall = () => fetch.mock.calls.filter(([url]) => url.includes('/auth/')).at(-1);
+const sentBody = () => JSON.parse(authCall()[1].body);
 const form = () => within(document.querySelector('form.auth-form'));
+let googleCallback;
+const googleId = {
+  initialize: vi.fn((options) => { googleCallback = options.callback; }),
+  renderButton: vi.fn((container) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = googleId.renderButton.mock.calls.at(-1)[1].text === 'signup_with'
+      ? 'Sign up with Google'
+      : 'Sign in with Google';
+    button.addEventListener('click', () => googleCallback({ credential: 'google-id-token' }));
+    container.replaceChildren(button);
+  }),
+};
 
 async function openPanel(user) {
   renderApp('/');
@@ -16,10 +32,43 @@ async function openPanel(user) {
 }
 const submit = (user, name) => user.click(form().getByRole('button', { name }));
 
-beforeEach(() => vi.stubGlobal('fetch', vi.fn()));
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(() => json({})));
+  googleCallback = null;
+  googleId.initialize.mockClear();
+  googleId.renderButton.mockClear();
+  loadGoogleIdentityServices.mockResolvedValue({ accounts: { id: googleId } });
+});
 afterEach(() => vi.unstubAllGlobals());
 
-describe('login panel (email + password only)', () => {
+describe('login panel (email/password and Google)', () => {
+  it('signs up with Google first and creates the account through the backend', async () => {
+    fetch.mockImplementationOnce(() => json({ token: 'google-jwt', customer: { id: 2, name: 'Pooja', email: 'pooja@example.com' } }));
+    const user = userEvent.setup();
+    await openPanel(user);
+    await user.click(screen.getByRole('tab', { name: 'Sign up' }));
+
+    await user.click(await screen.findByRole('button', { name: 'Sign up with Google' }));
+    expect(await screen.findByRole('heading', { name: /hi, pooja/i })).toBeInTheDocument();
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/pooja/auth/google');
+    expect(sentBody()).toEqual({ credential: 'google-id-token' });
+    expect(getSession()).toMatchObject({ token: 'google-jwt' });
+    expect(googleId.initialize).toHaveBeenCalledWith(expect.objectContaining({ client_id: 'test-google-client-id' }));
+    expect(googleId.renderButton).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ text: 'signup_with' }));
+  });
+
+  it('offers Google sign-in for an existing account', async () => {
+    fetch.mockImplementationOnce(() => json({ token: 'google-jwt', customer: { id: 2, name: 'Pooja', email: 'pooja@example.com' } }));
+    const user = userEvent.setup();
+    await openPanel(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Sign in with Google' }));
+    expect(await screen.findByRole('heading', { name: /hi, pooja/i })).toBeInTheDocument();
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/pooja/auth/google');
+    expect(sentBody()).toEqual({ credential: 'google-id-token' });
+    expect(googleId.renderButton).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ text: 'signin_with' }));
+  });
+
   it('asks for email and password only: no mobile, OTP or SMS anywhere', async () => {
     const user = userEvent.setup();
     await openPanel(user);
@@ -43,7 +92,7 @@ describe('login panel (email + password only)', () => {
     await submit(user, 'Create account');
 
     expect(await screen.findByRole('heading', { name: /hi, pooja/i })).toBeInTheDocument();
-    expect(fetch.mock.calls[0][0]).toBe('http://api.test/api/auth/signup');
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/pooja/auth/signup');
     expect(sentBody()).toEqual({ name: 'Pooja', email: 'pooja@example.com', password: 'password1' });
     expect(getSession()).toMatchObject({ token: 'jwt-1' });
   });
@@ -57,7 +106,7 @@ describe('login panel (email + password only)', () => {
     await submit(user, 'Log in');
 
     expect(await screen.findByRole('heading', { name: /hi, pooja/i })).toBeInTheDocument();
-    expect(fetch.mock.calls[0][0]).toBe('http://api.test/api/auth/login');
+    expect(fetch.mock.calls[0][0]).toBe('http://localhost:8000/api/pooja/auth/login');
     expect(sentBody()).toEqual({ email: 'pooja@example.com', password: 'password1' });
     expect(getSession()).toMatchObject({ token: 'jwt-2' });
   });

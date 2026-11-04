@@ -23,9 +23,18 @@ npm run build        # production build into dist/
 npm run preview      # serve dist/ locally (includes SPA fallback)
 ```
 
-Environment variables (see `.env.example`): `VITE_TENANT_ID` and `VITE_CRM_API_URL` (backend base URL, e.g. `http://localhost:8000`).
-`npm run dev` reads `.env.development`, which points at the local backend; tests and production builds do not.
-For a deployed build, set `VITE_CRM_API_URL` to your backend's public URL. Production SEO metadata defaults to
+Environment variables (see `.env.example`): `VITE_TENANT_ID`, `VITE_CRM_API_URL` (backend base URL, e.g. `http://localhost:8000`),
+and `VITE_GOOGLE_CLIENT_ID` for Google sign-in. The Google web client ID is public; use the same ID configured in the backend.
+`npm run dev` reads `.env.development` (already configured for local Google sign-in); restart the dev server after changing it.
+In Google Cloud Console, add every storefront origin under the OAuth client's **Authorized JavaScript origins**:
+`http://localhost:5173`, `http://127.0.0.1:5173`, and the production origin(s), such as `https://poojascollection.com`
+(also add `https://www.poojascollection.com` if that hostname serves the storefront). Google Identity Services uses
+authorized origins; it does not need a redirect URI for this button flow.
+
+Vite embeds `VITE_` variables at build time. For a production deployment, set `VITE_GOOGLE_CLIENT_ID` in the hosting
+provider's build environment (alongside `VITE_CRM_API_URL`) before running `npm run build`; setting it only at runtime
+after the assets have been built will not update the bundle. `.env.example` is a template and is not loaded by Vite.
+Tests and production builds do not read `.env.development`. Production SEO metadata defaults to
 `https://poojascollection.com`; override it with `VITE_SITE_URL` if the storefront domain changes. `public/robots.txt`
 and `public/sitemap.xml` are tracked source files copied into `dist/` during the build. The sitemap lists stable
 storefront and information pages; product and category URLs are supplied by the backend catalogue and are not included.
