@@ -19,34 +19,38 @@ export default function Home() {
 
   const products = getProducts();
 
-  // 👇 DYNAMIC LOGIC START: Tag based filtering 👇
+  // 👇 Helper function to safely check tags (ignores case & spaces) 👇
+  const hasTag = (product, validTags) => {
+    if (!product.tag) return false;
+    const pTag = String(product.tag).trim().toLowerCase();
+    return validTags.includes(pTag);
+  };
 
-  // 1. Favourites: Admin 'tag' la 'Best Seller' illa 'Favourite' illa 'Featured' nu set pannirundha, adhu inga varum.
-  let featuredProducts = products.filter(
-    (p) =>
-      p.tag === 'Best Seller' ||
-      p.tag === 'Favourite' ||
-      p.tag === 'Featured'
+  // 1. Trending: 'bestseller', 'viral', 'trending', illa 'new arrival' nu tag irundha mattum
+  let trendingProducts = products.filter((p) => 
+    hasTag(p, ['bestseller', 'best seller', 'viral', 'trending', 'new arrival'])
   );
 
-  // 2. Trending: Admin 'tag' la 'Trending' illa 'New Arrival' nu set pannirundha, adhu inga varum.
-  let trendingProducts = products.filter(
-    (p) => p.tag === 'Trending' || p.tag === 'New Arrival'
+  // 2. Favourites: 'favourite', 'favorite', illa 'featured' nu tag irundha mattum
+  let featuredProducts = products.filter((p) => 
+    hasTag(p, ['favourite', 'favorite', 'featured'])
   );
 
   // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
   // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
-  if (featuredProducts.length === 0) {
+  if (featuredProducts.length === 0 && trendingProducts.length === 0) {
     featuredProducts = products.slice(0, 4);
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
+  } else if (featuredProducts.length === 0) {
+    // Trending la irukkaradha favourites la kaatakoodadhu
+    const trendingIds = trendingProducts.map(p => p.id);
+    featuredProducts = products.filter(p => !trendingIds.includes(p.id)).slice(0, 4);
+  } else if (trendingProducts.length === 0) {
+    // Favourites la irukkaradha trending la kaatakoodadhu
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
   }
-
-  if (trendingProducts.length === 0) {
-    // Already favourites-la irukkaradha thirumba trending-la kaatakoodadhu
-    const featuredIds = featuredProducts.map((p) => p.id);
-    trendingProducts = products.filter((p) => !featuredIds.includes(p.id));
-  }
-
-  // 👆 DYNAMIC LOGIC END 👆
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
@@ -136,15 +140,10 @@ export default function Home() {
         </section>
       )}
 
-      {/* Reordered Sections */}
-      
       {/* Shop our favourites */}
       <FeaturedProducts products={featuredProducts} />
 
-      {/* More Than Just Jewellery */}
       <OurStory />
-
-      {/* Why Choose Pooja Collection? */}
       <WhyChooseUs />
 
     </div>
