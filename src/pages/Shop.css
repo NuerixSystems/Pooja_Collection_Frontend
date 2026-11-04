@@ -1,6 +1,13 @@
 /* Shop page: sidebar + results on desktop, toolbar + drawer on tablet/mobile. */
+@media (min-width: 761px) {
+  .container.shop-page { max-width: none; padding-inline: 24px; }
+}
+
 .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (min-width: 901px) { .shop-layout { grid-template-columns: 260px minmax(0, 1fr); gap: 32px; } }
+@media (min-width: 1281px) {
+  .shop-page .product-grid--shop { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 
 .shop-sidebar {
   position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow-y: auto;
