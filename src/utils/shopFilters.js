@@ -4,6 +4,8 @@
 
 import { getCategory } from '../services/catalog';
 
+export const PRICE_FILTER_MAX = 2000;
+
 export const SORT_OPTIONS = [
   { value: '', label: 'Featured' }, // the store's own catalogue order (existing behaviour)
   { value: 'price-asc', label: 'Price: low to high' },
@@ -19,7 +21,7 @@ const toInt = (value) => {
 
 /**
  * Read the filter state from URL params. Unknown categories and unknown sort values are ignored; prices are
- * clamped into `bounds`; a value equal to the catalogue limit means "no limit" and comes back as null.
+ * clamped between zero and the provided bounds; boundary values mean "no limit".
  */
 export function parseShopFilters(params, bounds) {
   const categories = [...new Set(params.getAll('category'))].filter((slug) => getCategory(slug));
@@ -27,12 +29,12 @@ export function parseShopFilters(params, bounds) {
   let min = toInt(params.get('minPrice'));
   let max = toInt(params.get('maxPrice'));
   if (bounds) {
-    if (min !== null) min = Math.min(Math.max(min, bounds.min), bounds.max);
-    if (max !== null) max = Math.min(Math.max(max, bounds.min), bounds.max);
+    if (min !== null) min = Math.min(Math.max(min, 0), bounds.max);
+    if (max !== null) max = Math.min(Math.max(max, 0), bounds.max);
   }
   if (min !== null && max !== null && min > max) [min, max] = [max, min];
   if (bounds) {
-    if (min === bounds.min) min = null;
+    if (min === 0) min = null;
     if (max === bounds.max) max = null;
   }
 

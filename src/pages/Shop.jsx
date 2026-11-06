@@ -5,7 +5,7 @@ import Panel from '../components/Panel';
 import ProductGrid from '../components/ProductGrid';
 import ShopFilters from '../components/ShopFilters';
 import { getCategories, getPriceBounds, getProducts } from '../services/catalog';
-import { RESET_PATCH, SORT_OPTIONS, countActiveFilters, parseShopFilters, withFilters } from '../utils/shopFilters';
+import { PRICE_FILTER_MAX, RESET_PATCH, SORT_OPTIONS, countActiveFilters, parseShopFilters, withFilters } from '../utils/shopFilters';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import './Shop.css';
@@ -18,7 +18,12 @@ export default function Shop() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draft, setDraft] = useState(null);
 
-  const bounds = useMemo(() => getPriceBounds(), []);
+  const bounds = useMemo(() => {
+    const catalogueBounds = getPriceBounds();
+    return catalogueBounds
+      ? { ...catalogueBounds, max: Math.max(catalogueBounds.max, PRICE_FILTER_MAX) }
+      : null;
+  }, []);
   const filters = useMemo(() => parseShopFilters(params, bounds), [params, bounds]);
   const { query, collection, sort } = filters;
 
@@ -53,7 +58,7 @@ export default function Shop() {
   const filterControls = (value, onChange, idPrefix) => (
     <ShopFilters value={value} onChange={onChange} bounds={bounds} categories={categoryOptions} idPrefix={idPrefix} />
   );
-  const hasFilterUi = Boolean(bounds && bounds.min < bounds.max) || categoryOptions.length > 0;
+  const hasFilterUi = Boolean(bounds && bounds.max > 0) || categoryOptions.length > 0;
 
   const empty = activeCount ? (
     <div className="empty">

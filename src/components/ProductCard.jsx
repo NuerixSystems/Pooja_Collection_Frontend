@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useStore } from '../context/StoreContext';
@@ -101,13 +102,19 @@ export default function ProductCard({
   };
 
 
-  // Prevent adding products when stock is zero.
+  // Add to cart with login validation and cart redirection.
   const handleAddToCart = () => {
     if (outOfStock || needsDesign || atMax) return;
 
     const result = addToCart(product.id);
-    
-    // 👇 Redirect to Cart Page if successfully added
+
+    // Ask the user to log in if authentication is required.
+    if (result?.reason === 'login-required') {
+      open('login');
+      return;
+    }
+
+    // Redirect only after successful addition.
     if (result?.ok) {
       navigate('/cart');
     }
@@ -124,7 +131,7 @@ export default function ProductCard({
       data-stock={stock}
     >
       <div className="product-media">
-        
+
         {/* Blurred backdrop fill */}
         <SafeImage
           src={product.image}
@@ -236,7 +243,7 @@ export default function ProductCard({
             </span>
           )}
 
-          {/* 👇 Ippo ellaa cards-layum (compact aanaalum) Add to Cart button varum */}
+          {/* Add to Cart button appears in normal and compact cards */}
           {outOfStock ? (
             <button
               type="button"

@@ -289,18 +289,19 @@ function ProductDetails({ product }) {
 
     const result = addToCart(product.id, designId);
     
-    if (result.reason === 'design-required') {
+    if (result?.reason === 'design-required') {
       setDesignError(true);
       pickerRef.current?.querySelector('input')?.focus();
       return;
     }
 
-    if (result.reason === 'login-required') {
+    if (result?.reason === 'login-required') {
       open('login');
       return;
     }
 
-    if (result.ok) {
+    // If successfully added, redirect to Cart Page
+    if (result?.ok) {
       navigate('/cart');
     }
   };
@@ -639,7 +640,7 @@ function ProductDetails({ product }) {
         </div>
       )}
 
-      {/* 👇 Added Address Modal with Add New Address Button */}
+      {/* Added Address Modal with Add New Address Button */}
       {showAddressModal && (
         <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
           <div className="address-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -669,7 +670,7 @@ function ProductDetails({ product }) {
               </ul>
             )}
             
-            {/* 👇 New Add Address Button added here */}
+            {/* New Add Address Button added here */}
             <Link 
               to="/account/addresses" 
               className="btn btn--ghost" 
@@ -688,7 +689,6 @@ function ProductDetails({ product }) {
           </div>
         </div>
       )}
-      {/* 👆 End of Added Address Modal */}
 
       <ReviewsSection product={product} />
       <RecommendedProducts products={others} />
