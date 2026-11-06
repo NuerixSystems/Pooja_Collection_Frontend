@@ -52,8 +52,7 @@ export const NAV_LINKS = [
   { key: 'contact', label: 'Contact Us', to: '/contact' },
 ];
 
-// Footer "Customer Care" links. Privacy/Terms are draft pages (pages/Legal.jsx): replace their text
-// with your own policy before launch.
+// Footer "Customer Care" links. Terms, Shipping and Return remain draft policy pages.
 export const FOOTER_CARE_LINKS = [
   { label: 'Help & Support', to: '/contact' },
   { label: 'Privacy Policy', to: '/privacy' },
