@@ -26,6 +26,18 @@ const newRequestId = () =>
 const UTR_RE = new RegExp(`^\\d{${UPI.utrLength}}$`);
 const MESSAGE_MAX = 350;
 
+const addressToCustomerValues = (address, fallbackEmail = '') => ({
+  name: address?.name || '',
+  phone: address?.phone || '',
+  email: String(address?.email || address?.Email || fallbackEmail)
+    .trim()
+    .toLowerCase(),
+  pincode: address?.pincode || '',
+  address: address?.addressLine || '',
+  city: address?.city || '',
+  state: address?.state || '',
+});
+
 const INSTAGRAM_GRADIENT_ID = 'instagram-gradient';
 const INSTAGRAM_HANDLE = '@poojascollection.official';
 const INSTAGRAM_URL = 'https://www.instagram.com/poojascollection.official';
@@ -238,17 +250,12 @@ export default function Contact() {
   const [searchParams] = useSearchParams();
   
   const [values, setValues] = useState(() => {
-    if (checkoutAddress) {
-      return {
-        name: checkoutAddress.name || '',
-        phone: checkoutAddress.phone || '',
-        pincode: checkoutAddress.pincode || '',
-        address: checkoutAddress.addressLine || '',
-        city: checkoutAddress.city || '',
-        state: checkoutAddress.state || '',
-      };
-    }
-    return {};
+    return checkoutAddress
+      ? addressToCustomerValues(
+          checkoutAddress,
+          getSession()?.customer?.email
+        )
+      : {};
   });
 
   // 👇 New States for handling multiple addresses 👇
@@ -266,15 +273,12 @@ export default function Contact() {
           const defaultAddr = data.find((a) => a.isDefault) || data[0];
           if (defaultAddr) {
             setSelectedAddress(defaultAddr);
-            setValues((prev) => ({
-              ...prev,
-              name: defaultAddr.name || '',
-              phone: defaultAddr.phone || '',
-              pincode: defaultAddr.pincode || '',
-              address: defaultAddr.addressLine || '',
-              city: defaultAddr.city || '',
-              state: defaultAddr.state || '',
-            }));
+            setValues(
+              addressToCustomerValues(
+                defaultAddr,
+                session.customer?.email
+              )
+            );
             setHasSavedAddress(true);
           } else {
             setHasSavedAddress(false);
@@ -284,6 +288,12 @@ export default function Contact() {
     } else if (checkoutAddress) {
       setHasSavedAddress(true);
       setSelectedAddress(checkoutAddress);
+      setValues(
+        addressToCustomerValues(
+          checkoutAddress,
+          session?.customer?.email
+        )
+      );
     } else {
       setHasSavedAddress(false);
     }
@@ -303,14 +313,9 @@ export default function Contact() {
   // 👇 Select Address from Modal 👇
   const handleSelectAddressFromModal = (addr) => {
     setSelectedAddress(addr);
-    setValues({
-      name: addr.name || '',
-      phone: addr.phone || '',
-      pincode: addr.pincode || '',
-      address: addr.addressLine || '',
-      city: addr.city || '',
-      state: addr.state || '',
-    });
+    setValues(
+      addressToCustomerValues(addr, getSession()?.customer?.email)
+    );
     setShowAddressModal(false);
   };
 
@@ -409,7 +414,7 @@ export default function Contact() {
               <h2>Your details</h2>
 
               {/* 👇 Address Summary / Form 👇 */}
-              {hasSavedAddress ? (
+              {hasSavedAddress && (
                 <div className="saved-address-box" style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e9ecef' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                     <MapPin size={20} color="#5C2336" />
@@ -420,6 +425,7 @@ export default function Contact() {
                     {values.address}, {values.city}, {values.state} - {values.pincode}
                   </p>
                   <p style={{ margin: '0 0 12px 0', color: '#777', fontSize: '14px' }}>Phone: {values.phone}</p>
+                  <p style={{ margin: '0 0 12px 0', color: '#777', fontSize: '14px' }}>Email: {values.email || 'Not provided'}</p>
                   
                   <button 
                     type="button" 
@@ -429,40 +435,19 @@ export default function Contact() {
                     Change Address <ChevronRight size={16} />
                   </button>
                 </div>
-              ) : (
-                <div className="field-grid">
-                  {CHECKOUT_FIELDS.map((f) => (
-                    <div key={f.name} className={`field ${f.wide ? 'field--wide' : ''}`}>
-                      <label htmlFor={`f-${f.name}`}>{f.label}</label>
-                      {f.type === 'password' ? (
-                        <div className="password-input-wrap">
-                          <input
-                            ref={(el) => { inputs.current[f.name] = el; }}
-                            id={`f-${f.name}`}
-                            name={f.name}
-                            type={showPassword ? 'text' : 'password'}
-                            inputMode={f.inputMode}
-                            autoComplete={f.autoComplete}
-                            value={values[f.name] || ''}
-                            onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
-                            aria-invalid={errors[f.name] ? 'true' : undefined}
-                            aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
-                          />
-                          <button
-                            type="button"
-                            className="password-toggle"
-                            onClick={() => setShowPassword(!showPassword)}
-                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          >
-                            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                          </button>
-                        </div>
-                      ) : (
+              )}
+
+              <div className="field-grid">
+                {CHECKOUT_FIELDS.map((f) => (
+                  <div key={f.name} className={`field ${f.wide ? 'field--wide' : ''}`}>
+                    <label htmlFor={`f-${f.name}`}>{f.label}</label>
+                    {f.type === 'password' ? (
+                      <div className="password-input-wrap">
                         <input
                           ref={(el) => { inputs.current[f.name] = el; }}
                           id={`f-${f.name}`}
                           name={f.name}
-                          type={f.type || 'text'}
+                          type={showPassword ? 'text' : 'password'}
                           inputMode={f.inputMode}
                           autoComplete={f.autoComplete}
                           value={values[f.name] || ''}
@@ -470,20 +455,41 @@ export default function Contact() {
                           aria-invalid={errors[f.name] ? 'true' : undefined}
                           aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
                         />
-                      )}
-                      {errors[f.name] && (
-                        <p className="field-error" id={`e-${f.name}`}>
-                          {errors[f.name]}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                  <div className="field field--wide">
-                    <label htmlFor="f-message">Message (optional)</label>
-                    <textarea id="f-message" rows="3" maxLength={MESSAGE_MAX} value={message} onChange={(e) => setMessage(e.target.value)} />
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        ref={(el) => { inputs.current[f.name] = el; }}
+                        id={`f-${f.name}`}
+                        name={f.name}
+                        type={f.type || 'text'}
+                        inputMode={f.inputMode}
+                        autoComplete={f.autoComplete}
+                        value={values[f.name] || ''}
+                        onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
+                        aria-invalid={errors[f.name] ? 'true' : undefined}
+                        aria-describedby={errors[f.name] ? `e-${f.name}` : undefined}
+                      />
+                    )}
+                    {errors[f.name] && (
+                      <p className="field-error" id={`e-${f.name}`}>
+                        {errors[f.name]}
+                      </p>
+                    )}
                   </div>
+                ))}
+                <div className="field field--wide">
+                  <label htmlFor="f-message">Message (optional)</label>
+                  <textarea id="f-message" rows="3" maxLength={MESSAGE_MAX} value={message} onChange={(e) => setMessage(e.target.value)} />
                 </div>
-              )}
+              </div>
 
               <fieldset className="pay-methods" style={{ marginTop: hasSavedAddress ? '20px' : '0' }}>
                 <legend>Payment method</legend>
