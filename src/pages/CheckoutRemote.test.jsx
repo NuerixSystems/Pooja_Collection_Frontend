@@ -25,9 +25,111 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
   seedCart([{ id: 'gold-tulip-rings-3-set', qty: 2 }]);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  localStorage.removeItem('pooja-collection:auth:v1');
+});
 
 describe('checkout with a backend', () => {
+  it('fills checkout email from the normal saved-address response shape', async () => {
+    localStorage.setItem('pooja-collection:auth:v1', JSON.stringify({
+      token: 'jwt-existing',
+      customer: { name: 'Asha' },
+    }));
+    fetch.mockImplementationOnce(() => json([{
+      id: 1,
+      name: 'Asha Raman',
+      phone: '9876543210',
+      email: 'asha@example.com',
+      pincode: '600004',
+      addressLine: '12 Temple Road',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      isDefault: true,
+    }]));
+
+    renderApp('/checkout');
+
+    await waitFor(() => {
+      expect(field('Email address')).toHaveValue('asha@example.com');
+    });
+    expect(field('Full name')).toHaveValue('Asha Raman');
+  });
+
+  it('fills checkout email from the saved address when the API returns an empty lowercase alias', async () => {
+    localStorage.setItem('pooja-collection:auth:v1', JSON.stringify({
+      token: 'jwt-existing',
+      customer: { name: 'Asha', email: 'account@example.com' },
+    }));
+    fetch.mockImplementationOnce(() => json([{
+      id: 1,
+      isDefault: true,
+      name: 'Asha Raman',
+      phone: '9876543210',
+      email: '',
+      Email: 'Saved@Example.com',
+      addressLine: '12 Temple Road',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      pincode: '600004',
+    }]));
+
+    renderApp('/checkout');
+
+    await waitFor(() => {
+      expect(field('Email address')).toHaveValue('saved@example.com');
+    });
+    expect(field('Full name')).toHaveValue('Asha Raman');
+  });
+
+  it('fills checkout email when the API uses an EmailAddress property', async () => {
+    localStorage.setItem('pooja-collection:auth:v1', JSON.stringify({
+      token: 'jwt-existing',
+      customer: { name: 'Asha', email: 'account@example.com' },
+    }));
+    fetch.mockImplementationOnce(() => json([{
+      id: 1,
+      isDefault: true,
+      name: 'Asha Raman',
+      phone: '9876543210',
+      EmailAddress: 'Saved@Example.com',
+      addressLine: '12 Temple Road',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      pincode: '600004',
+    }]));
+
+    renderApp('/checkout');
+
+    await waitFor(() => {
+      expect(field('Email address')).toHaveValue('saved@example.com');
+    });
+  });
+
+  it('falls back to the signed-in customer email when the saved address has none', async () => {
+    localStorage.setItem('pooja-collection:auth:v1', JSON.stringify({
+      token: 'jwt-existing',
+      customer: { name: 'Asha', EmailAddress: 'Account@Example.com' },
+    }));
+    fetch.mockImplementationOnce(() => json([{
+      id: 1,
+      isDefault: true,
+      name: 'Asha Raman',
+      phone: '9876543210',
+      email: '',
+      addressLine: '12 Temple Road',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      pincode: '600004',
+    }]));
+
+    renderApp('/checkout');
+
+    await waitFor(() => {
+      expect(field('Email address')).toHaveValue('account@example.com');
+    });
+  });
+
   it('posts the order, clears the cart and shows the confirmation from the server order', async () => {
     fetch.mockImplementationOnce(() => json(serverOrder(), 201));
     const user = userEvent.setup();
