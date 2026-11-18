@@ -1,4 +1,3 @@
-
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -20,8 +19,38 @@ export default function Home() {
 
   const products = getProducts();
 
-  const featuredProducts = products.slice(0, 4);
-  const trendingProducts = products.slice(4);
+  // 👇 Helper function to safely check tags (ignores case & spaces) 👇
+  const hasTag = (product, validTags) => {
+    if (!product.tag) return false;
+    const pTag = String(product.tag).trim().toLowerCase();
+    return validTags.includes(pTag);
+  };
+
+  // 1. Trending: 'bestseller', 'viral', 'trending', illa 'new arrival' nu tag irundha mattum
+  let trendingProducts = products.filter((p) => 
+    hasTag(p, ['bestseller', 'best seller', 'viral', 'trending', 'new arrival'])
+  );
+
+  // 2. Favourites: 'favourite', 'favorite', illa 'featured' nu tag irundha mattum
+  let featuredProducts = products.filter((p) => 
+    hasTag(p, ['favourite', 'favorite', 'featured'])
+  );
+
+  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
+  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
+  if (featuredProducts.length === 0 && trendingProducts.length === 0) {
+    featuredProducts = products.slice(0, 4);
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
+  } else if (featuredProducts.length === 0) {
+    // Trending la irukkaradha favourites la kaatakoodadhu
+    const trendingIds = trendingProducts.map(p => p.id);
+    featuredProducts = products.filter(p => !trendingIds.includes(p.id)).slice(0, 4);
+  } else if (trendingProducts.length === 0) {
+    // Favourites la irukkaradha trending la kaatakoodadhu
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
+  }
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
@@ -51,16 +80,10 @@ export default function Home() {
       {/* Divider */}
       <div className="home-divider" aria-hidden="true">
         <span className="home-divider-line" />
-
-        <svg
-          className="home-lotus"
-          viewBox="0 0 32 24"
-          fill="none"
-        >
+        <svg className="home-lotus" viewBox="0 0 32 24" fill="none">
           <path d="M16 21C9 21 5 17 5 12c4 0 7 2 9 6-1-6 0-10 2-14 2 4 3 8 2 14 2-4 5-6 9-6 0 5-4 9-11 9Z" />
           <path d="M3 18c4 0 7 1 10 3m16-3c-4 0-7 1-10 3" />
         </svg>
-
         <span className="home-divider-line" />
       </div>
 
@@ -75,7 +98,6 @@ export default function Home() {
               <h2 id="trend-title" className="section-title">
                 Trending now
               </h2>
-
               <p className="section-sub">
                 Our most loved products, handpicked for you
               </p>
@@ -88,23 +110,16 @@ export default function Home() {
           </div>
 
           <div className="home-product-carousel">
-
             <button
               type="button"
               className="home-carousel-arrow"
               aria-label="Previous products"
               onClick={() => scrollProducts(-1)}
             >
-              <ChevronRightIcon
-                size={20}
-                className="is-reversed"
-              />
+              <ChevronRightIcon size={20} className="is-reversed" />
             </button>
 
-            <div
-              className="home-product-window"
-              ref={productsRef}
-            >
+            <div className="home-product-window" ref={productsRef}>
               <ProductGrid
                 products={trendingProducts}
                 variant="home"
@@ -121,16 +136,15 @@ export default function Home() {
             >
               <ChevronRightIcon size={20} />
             </button>
-
           </div>
         </section>
       )}
 
-      <OurStory />
-
-      <WhyChooseUs />
-
+      {/* Shop our favourites */}
       <FeaturedProducts products={featuredProducts} />
+
+      <OurStory />
+      <WhyChooseUs />
 
     </div>
   );

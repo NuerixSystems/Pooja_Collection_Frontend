@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CRM } from '../config';
+import { CRM, GOOGLE_CLIENT_ID } from '../config';
 import { useUI } from '../context/UIContext';
 import { getProductById } from '../services/catalog';
-import { getSession, login, logout, signup } from '../services/auth';
+import { getSession, googleLogin, login, logout, signup } from '../services/auth';
 import { firstAuthError, validateAuth } from '../utils/authValidation';
+import { loadGoogleIdentityServices } from '../services/googleIdentity';
 import Panel from './Panel';
 import './LoginPanel.css';
 
@@ -27,6 +28,75 @@ function EyeOffIcon({ size = 20 }) {
   );
 }
 
+function GoogleSignInButton({ onCredential, onError, busy, isLogin }) {
+  const buttonRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (!GOOGLE_CLIENT_ID) {
+      onError('Google sign-in is not configured. Please use email and password.');
+      setLoading(false);
+      return () => { active = false; };
+    }
+
+    setLoading(true);
+    loadGoogleIdentityServices()
+      .then((google) => {
+        if (!active || !buttonRef.current) return;
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: ({ credential }) => {
+            if (!active) return;
+            if (!credential) {
+              onError('Google sign-in did not return a credential. Please try again.');
+              return;
+            }
+            onCredential(credential);
+          },
+        });
+        google.accounts.id.renderButton(buttonRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: isLogin ? 'signin_with' : 'signup_with',
+          shape: 'pill',
+          logo_alignment: 'left',
+          width: Math.max(buttonRef.current.clientWidth, 280),
+        });
+        setLoading(false);
+      })
+      .catch(() => {
+        if (active) {
+          setLoading(false);
+          onError('Google sign-in could not be loaded. Please try again.');
+        }
+      });
+
+    return () => {
+      active = false;
+      buttonRef.current?.replaceChildren();
+    };
+  }, [isLogin, onCredential, onError]);
+
+  if (!GOOGLE_CLIENT_ID) {
+    return (
+      <div className="auth-google-unavailable">
+        <button type="button" className="auth-google-fallback" disabled>
+          {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
+        </button>
+        <p>Google sign-in needs VITE_GOOGLE_CLIENT_ID to be configured.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="auth-google-shell" aria-busy={busy || loading}>
+      {loading && <span className="auth-google-loading">Loading Google sign-in…</span>}
+      <div ref={buttonRef} className="auth-google" />
+    </div>
+  );
+}
+
 // With a backend configured (VITE_CRM_API_URL) this signs customers up / in against /api/auth/*.
 // Without one it stays the "coming soon" placeholder, so the storefront still works standalone.
 function LoginForm() {
@@ -38,6 +108,23 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const isLogin = mode === 'login';
   const pendingName = pendingAdd ? getProductById(pendingAdd.id)?.name : null;
+
+  const handleGoogleCredential = useCallback(async (credential) => {
+    if (!CRM.apiUrl) {
+      setNotice('Customer accounts will be available soon. You can keep browsing and use your cart in the meantime.');
+      return;
+    }
+    setNotice('');
+    setBusy(true);
+    try {
+      setSession(await googleLogin(credential));
+    } catch (err) {
+      setNotice(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+  const handleGoogleError = useCallback((message) => setNotice(message), []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -106,6 +193,10 @@ function LoginForm() {
       <div className="auth-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={isLogin} onClick={() => { setMode('login'); setNotice(''); setShowPassword(false); }}>Log in</button>
         <button type="button" role="tab" aria-selected={!isLogin} onClick={() => { setMode('signup'); setNotice(''); setShowPassword(false); }}>Sign up</button>
+      </div>
+      <div className="auth-social">
+        <GoogleSignInButton onCredential={handleGoogleCredential} onError={handleGoogleError} busy={busy} isLogin={isLogin} />
+        <div className="auth-divider"><span>or continue with email</span></div>
       </div>
       <form className="auth-form" onSubmit={submit} noValidate>
         {!isLogin && (

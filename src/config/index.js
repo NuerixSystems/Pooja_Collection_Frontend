@@ -32,6 +32,8 @@ export const CRM = {
 
 };
 
+export const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+
 // Categories that must never appear anywhere in the storefront,
 // regardless of what the data source (mock or CRM) returns.
 export const EXCLUDED_CATEGORY_SLUGS = ['dresses'];
@@ -52,8 +54,7 @@ export const NAV_LINKS = [
   { key: 'contact', label: 'Contact Us', to: '/contact' },
 ];
 
-// Footer "Customer Care" links. Privacy/Terms are draft pages (pages/Legal.jsx): replace their text
-// with your own policy before launch.
+// Footer "Customer Care" links. Terms, Shipping and Return remain draft policy pages.
 export const FOOTER_CARE_LINKS = [
   { label: 'Help & Support', to: '/contact' },
   { label: 'Privacy Policy', to: '/privacy' },

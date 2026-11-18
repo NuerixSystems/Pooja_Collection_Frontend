@@ -7,12 +7,16 @@
 .reco-card:hover { border-color: rgba(184, 147, 90, .6); box-shadow: 0 10px 26px rgba(63, 20, 38, .1); transform: translateY(-2px); }
 .reco-link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
 .reco-media {
-  aspect-ratio: 4 / 5; overflow: hidden;
-  background: var(--cream); border-bottom: 1px solid rgba(184, 147, 90, .3);
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--cream);
+  border-bottom: 1px solid rgba(184, 147, 90, .3);
 }
-.reco-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform .4s ease; }
+.reco-img-backdrop { position: absolute; inset: -12px; width: calc(100% + 24px); max-width: none; height: calc(100% + 24px); object-fit: cover; filter: blur(16px); opacity: .65; }
+.reco-img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
 .reco-media .safe-image-fallback { width: 100%; height: 100%; }
-.reco-card:hover .reco-img { transform: scale(1.04); }
 .reco-info { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px 12px; flex: 1; }
 .reco-cat { margin: 0; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
 .reco-name { font-family: var(--font-ui); font-size: 1rem; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

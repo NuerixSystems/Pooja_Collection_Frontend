@@ -119,7 +119,8 @@
   .home-product-window {
     width: 100%;
     padding: 2px 0 10px;
-    overflow: visible;
+    overflow-x: auto; /* 👈 Ithu fix panniten (Munnaadi visible nu irundhuchu) */
+    overflow-y: hidden;
   }
   .home-product-carousel > .home-carousel-arrow { display: none; }
 }
@@ -132,7 +133,6 @@
 /* =========================================
    TRENDING PRODUCT CARDS
 ========================================= */
-
 .home-product-carousel {
   display: flex;
   align-items: center;
@@ -234,4 +234,48 @@
   .home-product-carousel > .home-carousel-arrow {
     display: none;
   }
+}
+
+@media (min-width: 761px) {
+  .section.section--categories.home-categories { padding: 20px 0 0; }
+  .section.section--trending.home-trending { padding: 26px 0 52px; }
+  .home-trending-head { margin-bottom: 9px; }
+  .home-trending .section-title { font-size: clamp(2rem, 3vw, 2.4rem); }
+  .home-trending .section-sub { line-height: 1.3; }
+  .home-categories .cat-item { width: clamp(132px, 10.3vw, 148px); }
+  .home-categories .cat-circle {
+    width: clamp(104px, 8.5vw, 116px);
+    height: clamp(104px, 8.5vw, 116px);
+  }
+}
+
+@media (min-width: 761px) {
+  .category-carousel > .home-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 4;
+    transform: translateY(-50%);
+  }
+
+  .category-carousel > .home-carousel-arrow:first-child { left: 0; }
+  .category-carousel > .home-carousel-arrow:last-child { right: 0; }
+
+  .home-product-carousel > .home-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 4;
+    transform: translateY(-50%);
+  }
+
+  .home-product-carousel > .home-carousel-arrow:first-child { left: 0; }
+  .home-product-carousel > .home-carousel-arrow:last-child { right: 0; }
+
+  .home-product-window { padding: 0 41px 8px; }
+
+  .home-product-window > .product-grid--home > .product-card {
+    flex-basis: clamp(176px, 13vw, 190px);
+    width: clamp(176px, 13vw, 190px);
+  }
+
+  .home-product-window > .product-grid--home { gap: 16px; }
 }

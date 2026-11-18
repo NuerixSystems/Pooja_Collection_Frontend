@@ -104,7 +104,7 @@ export default function Header() {
   };
 
   return (
-    <header className="site-header">
+    <header className={`site-header${location.pathname === '/' ? ' site-header--home' : ''}`}>
       {/* Top Bar: Logo, Search, Icons */}
       <div className="header-top">
         <div className={`header-shell${location.pathname === '/' ? ' header-shell--home' : ''}`}>

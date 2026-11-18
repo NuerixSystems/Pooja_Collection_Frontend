@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { MapPin, ChevronRight } from 'lucide-react'; // 👈 Icons added
 import QuantityStepper from '../components/QuantityStepper';
 import SafeImage from '../components/SafeImage';
 import { TrashIcon } from '../components/Icons';
@@ -11,6 +12,8 @@ import { ApiError } from '../services/api';
 import { placeOrderRemote } from '../services/orders';
 import { submitEnquiry } from '../services/enquiries';
 import { getProductBySlug } from '../services/catalog';
+import { getAddresses } from '../services/address';
+import { getSession } from '../services/auth';
 import { CHECKOUT_FIELDS, normalizeIndianMobile, validateCheckout } from '../utils/checkout';
 import { formatPrice } from '../utils/format';
 import './CartPage.css';
@@ -22,6 +25,18 @@ const newRequestId = () =>
 
 const UTR_RE = new RegExp(`^\\d{${UPI.utrLength}}$`);
 const MESSAGE_MAX = 350;
+
+const addressToCustomerValues = (address, fallbackEmail = '') => ({
+  name: address?.name || '',
+  phone: address?.phone || '',
+  email: String(address?.email || address?.Email || fallbackEmail)
+    .trim()
+    .toLowerCase(),
+  pincode: address?.pincode || '',
+  address: address?.addressLine || '',
+  city: address?.city || '',
+  state: address?.state || '',
+});
 
 const INSTAGRAM_GRADIENT_ID = 'instagram-gradient';
 const INSTAGRAM_HANDLE = '@poojascollection.official';
@@ -65,7 +80,6 @@ function InstagramIcon({ size = 28 }) {
   );
 }
 
-// --- Added Eye Icons for Password Toggle ---
 function EyeIcon({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -232,23 +246,78 @@ function ProductEnquiry({ product, designId, qty }) {
 export default function Contact() {
   const { lines, cartTotal, cartCount, maxQty, setQty, removeFromCart, clearCart } = useStore();
   const navigate = useNavigate();
-  const { open, checkoutAddress } = useUI(); // 👈 checkoutAddress import
+  const { open, checkoutAddress } = useUI();
   const [searchParams] = useSearchParams();
   
-  // 👇 FIXED: Initialize values with checkoutAddress directly
   const [values, setValues] = useState(() => {
-    if (checkoutAddress) {
-      return {
-        name: checkoutAddress.name || '',
-        phone: checkoutAddress.phone || '',
-        pincode: checkoutAddress.pincode || '',
-        address: checkoutAddress.addressLine || '',
-        city: checkoutAddress.city || '',
-        state: checkoutAddress.state || '',
-      };
-    }
-    return {};
+    return checkoutAddress
+      ? addressToCustomerValues(
+          checkoutAddress,
+          getSession()?.customer?.email
+        )
+      : {};
   });
+
+  // 👇 New States for handling multiple addresses 👇
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(checkoutAddress || null);
+  const [hasSavedAddress, setHasSavedAddress] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+
+  useEffect(() => {
+    const session = getSession();
+    if (session && !checkoutAddress) {
+      getAddresses()
+        .then((data) => {
+          setSavedAddresses(data);
+          const defaultAddr = data.find((a) => a.isDefault) || data[0];
+          if (defaultAddr) {
+            setSelectedAddress(defaultAddr);
+            setValues(
+              addressToCustomerValues(
+                defaultAddr,
+                session.customer?.email
+              )
+            );
+            setHasSavedAddress(true);
+          } else {
+            setHasSavedAddress(false);
+          }
+        })
+        .catch(() => setHasSavedAddress(false));
+    } else if (checkoutAddress) {
+      setHasSavedAddress(true);
+      setSelectedAddress(checkoutAddress);
+      setValues(
+        addressToCustomerValues(
+          checkoutAddress,
+          session?.customer?.email
+        )
+      );
+    } else {
+      setHasSavedAddress(false);
+    }
+  }, [checkoutAddress]);
+
+  // 👇 Clicking Change Address 👇
+  const handleChangeAddressClick = () => {
+    if (savedAddresses.length > 1) {
+      // Multiple address irundha modal open aagum
+      setShowAddressModal(true);
+    } else {
+      // Oru address mattum irundha (illa none), form open aagum
+      setHasSavedAddress(false);
+    }
+  };
+
+  // 👇 Select Address from Modal 👇
+  const handleSelectAddressFromModal = (addr) => {
+    setSelectedAddress(addr);
+    setValues(
+      addressToCustomerValues(addr, getSession()?.customer?.email)
+    );
+    setShowAddressModal(false);
+  };
 
   const [message, setMessage] = useState('');
   const [payment, setPayment] = useState('upi');
@@ -258,8 +327,6 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
-  
-  // Added state for password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
   
   const inputs = useRef({});
@@ -300,7 +367,11 @@ export default function Contact() {
       first = first || 'utr';
     }
     setErrors(found);
+    
     if (first) {
+      if (hasSavedAddress && found[first] && first !== 'utr') {
+        setHasSavedAddress(false);
+      }
       setFocusRequest((r) => ({ field: first, attempt: r.attempt + 1 }));
       return;
     }
@@ -341,6 +412,31 @@ export default function Contact() {
           <div className="cart-layout">
             <form className="checkout-form" onSubmit={submit} noValidate>
               <h2>Your details</h2>
+
+              {/* 👇 Address Summary / Form 👇 */}
+              {hasSavedAddress && (
+                <div className="saved-address-box" style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e9ecef' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <MapPin size={20} color="#5C2336" />
+                    <h3 style={{ margin: 0, fontSize: '16px', color: '#333' }}>Delivery Address</h3>
+                  </div>
+                  <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#333' }}>{values.name}</p>
+                  <p style={{ margin: '0 0 6px 0', color: '#555', fontSize: '14px', lineHeight: '1.5' }}>
+                    {values.address}, {values.city}, {values.state} - {values.pincode}
+                  </p>
+                  <p style={{ margin: '0 0 12px 0', color: '#777', fontSize: '14px' }}>Phone: {values.phone}</p>
+                  <p style={{ margin: '0 0 12px 0', color: '#777', fontSize: '14px' }}>Email: {values.email || 'Not provided'}</p>
+                  
+                  <button 
+                    type="button" 
+                    onClick={handleChangeAddressClick}
+                    style={{ display: 'inline-flex', alignItems: 'center', background: 'none', border: 'none', color: '#5C2336', fontWeight: 'bold', cursor: 'pointer', padding: 0, fontSize: '14px' }}
+                  >
+                    Change Address <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+
               <div className="field-grid">
                 {CHECKOUT_FIELDS.map((f) => (
                   <div key={f.name} className={`field ${f.wide ? 'field--wide' : ''}`}>
@@ -348,9 +444,7 @@ export default function Contact() {
                     {f.type === 'password' ? (
                       <div className="password-input-wrap">
                         <input
-                          ref={(el) => {
-                            inputs.current[f.name] = el;
-                          }}
+                          ref={(el) => { inputs.current[f.name] = el; }}
                           id={`f-${f.name}`}
                           name={f.name}
                           type={showPassword ? 'text' : 'password'}
@@ -372,9 +466,7 @@ export default function Contact() {
                       </div>
                     ) : (
                       <input
-                        ref={(el) => {
-                          inputs.current[f.name] = el;
-                        }}
+                        ref={(el) => { inputs.current[f.name] = el; }}
                         id={`f-${f.name}`}
                         name={f.name}
                         type={f.type || 'text'}
@@ -399,7 +491,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              <fieldset className="pay-methods">
+              <fieldset className="pay-methods" style={{ marginTop: hasSavedAddress ? '20px' : '0' }}>
                 <legend>Payment method</legend>
                 <label className={`pay-option ${payment === 'upi' ? 'is-selected' : ''}`}>
                   <input type="radio" name="payment" value="upi" checked={payment === 'upi'} onChange={() => setPayment('upi')} />
@@ -474,6 +566,58 @@ export default function Contact() {
           </div>
         )}
       </section>
+
+      {/* 👇 Added Address Modal for Multiple Addresses 👇 */}
+      {showAddressModal && (
+        <div className="address-modal-overlay" onClick={() => setShowAddressModal(false)}>
+          <div className="address-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="address-modal-title">Select Delivery Address</h3>
+            {savedAddresses.length === 0 ? (
+              <div className="address-modal-empty">
+                <p>No addresses saved.</p>
+              </div>
+            ) : (
+              <ul className="address-modal-list">
+                {savedAddresses.map((addr) => (
+                  <li
+                    key={addr.id}
+                    className={`address-modal-item ${selectedAddress?.id === addr.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectAddressFromModal(addr)}
+                  >
+                    <div className="address-modal-radio">
+                      <input type="radio" checked={selectedAddress?.id === addr.id} readOnly />
+                    </div>
+                    <div className="address-modal-details">
+                      <strong>{addr.name}</strong> {addr.isDefault && <span className="default-tag">Default</span>}
+                      <p>{addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}</p>
+                      <small>{addr.phone}</small>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            
+            {/* 👇 Form open panna indha button 👇 */}
+            <button 
+              type="button" 
+              onClick={() => { setShowAddressModal(false); setHasSavedAddress(false); }} 
+              className="btn btn--ghost" 
+              style={{ width: '100%', marginBottom: '10px', display: 'flex', justifyContent: 'center' }}
+            >
+              + Add New Address
+            </button>
+
+            <button
+              type="button"
+              className="btn btn--ghost address-modal-close"
+              onClick={() => setShowAddressModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* 👆 End of Address Modal 👆 */}
     </div>
   );
 }

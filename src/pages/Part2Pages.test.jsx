@@ -21,16 +21,38 @@ describe('footer (Part 2)', () => {
   });
 });
 
-describe('draft policy pages', () => {
+describe('policy pages', () => {
   it.each([
     ['/shipping-policy', 'Shipping Policy'],
     ['/return-policy', 'Return Policy'],
-    ['/privacy', 'Privacy Policy'],
-    ['/terms', 'Terms & Conditions'],
   ])('%s is clearly marked as a draft', (route, title) => {
     renderApp(route);
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
     expect(screen.getByRole('note')).toHaveTextContent(/draft page/i);
+  });
+
+  it('privacy route renders the complete policy and business contact details', () => {
+    renderApp('/privacy');
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getAllByRole('heading', { level: 2 })).toHaveLength(14);
+    expect(screen.getByText('Effective date: November 6, 2026')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Poojascollection31@gmail.com' }))
+      .toHaveAttribute('href', 'mailto:Poojascollection31@gmail.com');
+    expect(screen.getByText(/Sri Ramachandra Bus Stop, near 66 Mount Poonamallee Road/))
+      .toBeInTheDocument();
+  });
+
+  it('terms route renders the supplied terms and links to the privacy policy', () => {
+    renderApp('/terms');
+    const main = within(screen.getByRole('main'));
+    expect(main.getByRole('heading', { level: 1, name: 'Terms & Conditions' })).toBeInTheDocument();
+    expect(main.getAllByRole('heading', { level: 2 })).toHaveLength(17);
+    expect(main.getByText('Last Updated: November 6, 2026')).toBeInTheDocument();
+    expect(main.getAllByText(/Pending Verification/)).toHaveLength(3);
+    expect(main.getByText(/within 24 hours of delivery/)).toBeInTheDocument();
+    expect(main.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy');
+    expect(main.getByRole('link', { name: 'Poojascollection31@gmail.com' }))
+      .toHaveAttribute('href', 'mailto:Poojascollection31@gmail.com');
   });
 
   it('shipping and return pages do not invent delivery times, charges, return periods or refund terms', () => {

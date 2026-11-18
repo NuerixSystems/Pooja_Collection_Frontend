@@ -16,7 +16,7 @@ export default function Shop() {
   const [params, setParams] = useSearchParams();
   const isDesktop = useMediaQuery('(min-width: 901px)');
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [draft, setDraft] = useState(null); // drawer-only: filters being edited before Apply
+  const [draft, setDraft] = useState(null);
 
   const bounds = useMemo(() => {
     const catalogueBounds = getPriceBounds();
@@ -30,12 +30,11 @@ export default function Shop() {
   const title = query ? `Results for “${query}”` : TITLES[collection] || 'Shop all';
   useDocumentTitle(title);
 
-  // Everything is filtered in memory from the already-loaded catalogue, so changing a filter makes no API request.
   const products = useMemo(
     () => getProducts({ query, collection, sort, categorySlugs: filters.categories, minPrice: filters.minPrice ?? undefined, maxPrice: filters.maxPrice ?? undefined }),
     [query, collection, sort, filters.categories, filters.minPrice, filters.maxPrice],
   );
-  // Category counts reflect the current search / collection, so a count never promises products that would not show.
+
   const categoryOptions = useMemo(() => {
     const base = getProducts({ query, collection, minPrice: filters.minPrice ?? undefined, maxPrice: filters.maxPrice ?? undefined });
     const counts = {};
@@ -123,4 +122,4 @@ export default function Shop() {
       )}
     </div>
   );
-}
+} 

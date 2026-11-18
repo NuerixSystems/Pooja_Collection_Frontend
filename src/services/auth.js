@@ -11,6 +11,9 @@ export const signup = async ({ name, email, password }) =>
 export const login = async ({ email, password }) =>
   saveSession(await api('/auth/login', { method: 'POST', body: { email, password } }));
 
+export const googleLogin = async (credential) =>
+  saveSession(await api('/auth/google', { method: 'POST', body: { credential } }));
+
 // ---------- profile ----------
 
 /** Fetch the latest customer profile (name, email, phone) from the server. */
