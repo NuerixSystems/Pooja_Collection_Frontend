@@ -15,7 +15,7 @@ import { getProducts } from '../services/catalog';
 import './Home.css';
 
 // 👇 Trending Now-la kaata vendiya products-oda IDs
-//    (latest-to-old order code-la handle aagum, array order-a pathukkaadhu)
+//    (latest-to-old order code-la handle aagum)
 const TRENDING_PRODUCT_IDS = [59, 58, 57, 56, 54, 53, 52, 51];
 
 // 👇 Favourites-la evlo products venum
@@ -37,6 +37,7 @@ const getProductTime = (product) => {
 
 export default function Home() {
   const productsRef = useRef(null);
+
   const products = getProducts();
 
   /* ---------------- TRENDING NOW — latest to old ---------------- */
@@ -52,6 +53,7 @@ export default function Home() {
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
+
     productsRef.current.scrollBy({
       left: direction * productsRef.current.clientWidth * 0.75,
       behavior: 'smooth',
@@ -60,6 +62,7 @@ export default function Home() {
 
   return (
     <div className="container container--full">
+
       {/* Categories */}
       <section
         id="categories"
@@ -69,6 +72,7 @@ export default function Home() {
         <h1 id="cat-title" className="visually-hidden">
           Shop by category
         </h1>
+
         <CategoryGrid />
       </section>
 
@@ -97,6 +101,7 @@ export default function Home() {
                 Our most loved products, handpicked for you
               </p>
             </div>
+
             <Link to="/shop" className="text-link">
               View all
               <ChevronRightIcon size={18} />
@@ -139,6 +144,7 @@ export default function Home() {
 
       <OurStory />
       <WhyChooseUs />
+
     </div>
   );
 }
