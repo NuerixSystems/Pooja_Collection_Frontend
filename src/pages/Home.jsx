@@ -16,7 +16,8 @@ import './Home.css';
 
 // 👇 Trending Now-la kaata vendiya products-oda IDs
 //    (latest-to-old order code-la handle aagum, array order-a pathukkaadhu)
-const TRENDING_PRODUCT_IDS = [1, 5, 12, 23];
+#const TRENDING_PRODUCT_IDS = [1, 5, 12, 23];
+const TRENDING_PRODUCT_IDS = [59,58,57,56,54,53,52,51];
 
 // 👇 Favourites-la evlo products venum
 const FAVOURITES_LIMIT = 7;
