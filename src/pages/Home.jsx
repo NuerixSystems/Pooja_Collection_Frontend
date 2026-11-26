@@ -14,42 +14,43 @@ import { getProducts } from '../services/catalog';
 
 import './Home.css';
 
-// 👇 Trending Now-la kaata vendiya products-oda IDs
-//    (latest-to-old order code-la handle aagum)
-const TRENDING_PRODUCT_IDS = [59, 58, 57, 56, 54, 53, 52, 51];
-
-// 👇 Favourites-la evlo products venum
-const FAVOURITES_LIMIT = 7;
-
-/* ------------------------------------------------------------------
- * Helper: product-oda "added time"-a kandupidikka.
- * 1) createdAt / created_at irundha adhu use pannu
- * 2) Illa na id-a use pannu (bigger id = newer)
- * ------------------------------------------------------------------ */
-const getProductTime = (product) => {
-  const createdAt = product?.createdAt || product?.created_at;
-  if (createdAt) {
-    const t = new Date(createdAt).getTime();
-    if (Number.isFinite(t)) return t;
-  }
-  return Number(product?.id) || 0;
-};
-
 export default function Home() {
   const productsRef = useRef(null);
 
   const products = getProducts();
 
-  /* ---------------- TRENDING NOW — latest to old ---------------- */
-  const trendingProducts = products
-    .filter((p) => TRENDING_PRODUCT_IDS.includes(p.id))
-    .sort((a, b) => getProductTime(b) - getProductTime(a)); // latest mudhalla
+  // 👇 Helper function to safely check tags (ignores case & spaces) 👇
+  const hasTag = (product, validTags) => {
+    if (!product.tag) return false;
+    const pTag = String(product.tag).trim().toLowerCase();
+    return validTags.includes(pTag);
+  };
 
-  /* ---------------- FAVOURITES — last-a add panna 7 ---------------- */
-  // Latest 7 products (last-a add pannadhu mudhalla varum)
-  const featuredProducts = [...products]
-    .sort((a, b) => getProductTime(b) - getProductTime(a)) // latest mudhalla
-    .slice(0, FAVOURITES_LIMIT); // mudhal 7
+  // 1. Trending: 'bestseller', 'viral', 'trending', illa 'new arrival' nu tag irundha mattum
+  let trendingProducts = products.filter((p) => 
+    hasTag(p, ['bestseller', 'best seller', 'viral', 'trending', 'new arrival'])
+  );
+
+  // 2. Favourites: 'favourite', 'favorite', illa 'featured' nu tag irundha mattum
+  let featuredProducts = products.filter((p) => 
+    hasTag(p, ['favourite', 'favorite', 'featured'])
+  );
+
+  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
+  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
+  if (featuredProducts.length === 0 && trendingProducts.length === 0) {
+    featuredProducts = products.slice(0, 4);
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
+  } else if (featuredProducts.length === 0) {
+    // Trending la irukkaradha favourites la kaatakoodadhu
+    const trendingIds = trendingProducts.map(p => p.id);
+    featuredProducts = products.filter(p => !trendingIds.includes(p.id)).slice(0, 4);
+  } else if (trendingProducts.length === 0) {
+    // Favourites la irukkaradha trending la kaatakoodadhu
+    const featuredIds = featuredProducts.map(p => p.id);
+    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
+  }
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
@@ -86,7 +87,7 @@ export default function Home() {
         <span className="home-divider-line" />
       </div>
 
-      {/* Trending Now — latest to old */}
+      {/* Trending Products */}
       {trendingProducts.length > 0 && (
         <section
           className="section section--trending home-trending"
@@ -139,7 +140,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Shop our favourites — last-a add panna 7 (latest mudhalla) */}
+      {/* Shop our favourites */}
       <FeaturedProducts products={featuredProducts} />
 
       <OurStory />
