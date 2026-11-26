@@ -14,47 +14,44 @@ import { getProducts } from '../services/catalog';
 
 import './Home.css';
 
+// 👇 Trending Now-la kaata vendiya products-oda IDs
+//    (latest-to-old order code-la handle aagum, array order-a pathukkaadhu)
+const TRENDING_PRODUCT_IDS = [1, 5, 12, 23];
+
+// 👇 Favourites-la evlo products venum
+const FAVOURITES_LIMIT = 7;
+
+/* ------------------------------------------------------------------
+ * Helper: product-oda "added time"-a kandupidikka.
+ * 1) createdAt / created_at irundha adhu use pannu
+ * 2) Illa na id-a use pannu (bigger id = newer)
+ * ------------------------------------------------------------------ */
+const getProductTime = (product) => {
+  const createdAt = product?.createdAt || product?.created_at;
+  if (createdAt) {
+    const t = new Date(createdAt).getTime();
+    if (Number.isFinite(t)) return t;
+  }
+  return Number(product?.id) || 0;
+};
+
 export default function Home() {
   const productsRef = useRef(null);
-
   const products = getProducts();
 
-  // 👇 Helper function to safely check tags (ignores case & spaces) 👇
-  const hasTag = (product, validTags) => {
-    if (!product.tag) return false;
-    const pTag = String(product.tag).trim().toLowerCase();
-    return validTags.includes(pTag);
-  };
+  /* ---------------- TRENDING NOW — latest to old ---------------- */
+  const trendingProducts = products
+    .filter((p) => TRENDING_PRODUCT_IDS.includes(p.id))
+    .sort((a, b) => getProductTime(b) - getProductTime(a)); // latest mudhalla
 
-  // 1. Trending: 'bestseller', 'viral', 'trending', illa 'new arrival' nu tag irundha mattum
-  let trendingProducts = products.filter((p) => 
-    hasTag(p, ['bestseller', 'best seller', 'viral', 'trending', 'new arrival'])
-  );
-
-  // 2. Favourites: 'favourite', 'favorite', illa 'featured' nu tag irundha mattum
-  let featuredProducts = products.filter((p) => 
-    hasTag(p, ['favourite', 'favorite', 'featured'])
-  );
-
-  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
-  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
-  if (featuredProducts.length === 0 && trendingProducts.length === 0) {
-    featuredProducts = products.slice(0, 4);
-    const featuredIds = featuredProducts.map(p => p.id);
-    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
-  } else if (featuredProducts.length === 0) {
-    // Trending la irukkaradha favourites la kaatakoodadhu
-    const trendingIds = trendingProducts.map(p => p.id);
-    featuredProducts = products.filter(p => !trendingIds.includes(p.id)).slice(0, 4);
-  } else if (trendingProducts.length === 0) {
-    // Favourites la irukkaradha trending la kaatakoodadhu
-    const featuredIds = featuredProducts.map(p => p.id);
-    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
-  }
+  /* ---------------- FAVOURITES — last-a add panna 7 ---------------- */
+  // Latest 7 products (last-a add pannadhu mudhalla varum)
+  const featuredProducts = [...products]
+    .sort((a, b) => getProductTime(b) - getProductTime(a)) // latest mudhalla
+    .slice(0, FAVOURITES_LIMIT); // mudhal 7
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
-
     productsRef.current.scrollBy({
       left: direction * productsRef.current.clientWidth * 0.75,
       behavior: 'smooth',
@@ -63,7 +60,6 @@ export default function Home() {
 
   return (
     <div className="container container--full">
-
       {/* Categories */}
       <section
         id="categories"
@@ -73,7 +69,6 @@ export default function Home() {
         <h1 id="cat-title" className="visually-hidden">
           Shop by category
         </h1>
-
         <CategoryGrid />
       </section>
 
@@ -87,7 +82,7 @@ export default function Home() {
         <span className="home-divider-line" />
       </div>
 
-      {/* Trending Products */}
+      {/* Trending Now — latest to old */}
       {trendingProducts.length > 0 && (
         <section
           className="section section--trending home-trending"
@@ -102,7 +97,6 @@ export default function Home() {
                 Our most loved products, handpicked for you
               </p>
             </div>
-
             <Link to="/shop" className="text-link">
               View all
               <ChevronRightIcon size={18} />
@@ -140,12 +134,11 @@ export default function Home() {
         </section>
       )}
 
-      {/* Shop our favourites */}
+      {/* Shop our favourites — last-a add panna 7 (latest mudhalla) */}
       <FeaturedProducts products={featuredProducts} />
 
       <OurStory />
       <WhyChooseUs />
-
     </div>
   );
 }
