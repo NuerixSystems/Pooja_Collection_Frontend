@@ -16,45 +16,27 @@ import './Home.css';
 
 export default function Home() {
   const productsRef = useRef(null);
-
   const products = getProducts();
 
-  // 👇 Helper function to safely check tags (ignores case & spaces) 👇
-  const hasTag = (product, validTags) => {
-    if (!product.tag) return false;
-    const pTag = String(product.tag).trim().toLowerCase();
-    return validTags.includes(pTag);
-  };
+  // --- Favourites: tag-based ---
+  let featuredProducts = products.filter((p) => {
+    if (!p.tag) return false;
+    const t = String(p.tag).trim().toLowerCase();
+    return ['favourite', 'favorite', 'featured'].includes(t);
+  });
 
-  // 1. Trending: 'bestseller', 'viral', 'trending', illa 'new arrival' nu tag irundha mattum
-  let trendingProducts = products.filter((p) => 
-    hasTag(p, ['bestseller', 'best seller', 'viral', 'trending', 'new arrival'])
-  );
-
-  // 2. Favourites: 'favourite', 'favorite', illa 'featured' nu tag irundha mattum
-  let featuredProducts = products.filter((p) => 
-    hasTag(p, ['favourite', 'favorite', 'featured'])
-  );
-
-  // Fallback: Oru velai admin edhuvum tag pannala na, page kaaliya irukka koodadhu.
-  // Adhanaala default-a mudhal 4-a favourites-kum, mathadha trending-kum edukkalam.
-  if (featuredProducts.length === 0 && trendingProducts.length === 0) {
+  // Fallback: no favourites tagged → first 4 products
+  if (featuredProducts.length === 0) {
     featuredProducts = products.slice(0, 4);
-    const featuredIds = featuredProducts.map(p => p.id);
-    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
-  } else if (featuredProducts.length === 0) {
-    // Trending la irukkaradha favourites la kaatakoodadhu
-    const trendingIds = trendingProducts.map(p => p.id);
-    featuredProducts = products.filter(p => !trendingIds.includes(p.id)).slice(0, 4);
-  } else if (trendingProducts.length === 0) {
-    // Favourites la irukkaradha trending la kaatakoodadhu
-    const featuredIds = featuredProducts.map(p => p.id);
-    trendingProducts = products.filter(p => !featuredIds.includes(p.id));
   }
+
+  // --- Trending: ALL products, newest first (no tags, no exclusions) ---
+  const trendingProducts = [...products].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
   const scrollProducts = (direction) => {
     if (!productsRef.current) return;
-
     productsRef.current.scrollBy({
       left: direction * productsRef.current.clientWidth * 0.75,
       behavior: 'smooth',
@@ -63,7 +45,6 @@ export default function Home() {
 
   return (
     <div className="container container--full">
-
       {/* Categories */}
       <section
         id="categories"
@@ -73,7 +54,6 @@ export default function Home() {
         <h1 id="cat-title" className="visually-hidden">
           Shop by category
         </h1>
-
         <CategoryGrid />
       </section>
 
@@ -145,7 +125,6 @@ export default function Home() {
 
       <OurStory />
       <WhyChooseUs />
-
     </div>
   );
 }
